@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= challenge.title %> — SolveLink Innovation Challenge</title>
+  <meta name="description" content="<%= challenge.description ? challenge.description.substring(0, 150) : 'SolveLink innovation challenge' %>">
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/challenges.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation Bar (Platform Level) -->
+  <%- include('partials/navbar', { activePath: '/challenges' }) %>
+
+  <%
+    // Resolve Cover Image
+    let heroImage = challenge.image || (challenge.images && challenge.images.length > 0 ? challenge.images[0] : null) || (challenge.sourceProblem && challenge.sourceProblem.images && challenge.sourceProblem.images.length > 0 ? challenge.sourceProblem.images[0] : null);
+    if (!heroImage) {
+      const cat = (challenge.category || '').toLowerCase();
+      if (cat.includes('water') || cat.includes('sanitation') || cat.includes('drainage')) {
+        heroImage = '/images/challenge-water.jpg';
+      } else if (cat.includes('agri') || cat.includes('energy') || cat.includes('solar') || cat.includes('forest')) {
+        heroImage = '/images/challenge-agriculture.jpg';
+      } else if (cat.includes('edu') || cat.includes('digital') || cat.includes('school')) {
+        heroImage = '/images/challenge-education.jpg';
+      } else {
+        heroImage = '/images/jharkhand-hero.jpg';
+      }
+    }
+
+    let statusBadgeClass = 'badge-neutral';
+    let statusLabel = challenge.status ? challenge.status.replace(/_/g, ' ') : 'OPEN';
+    if (challenge.status === 'PUBLISHED' || challenge.status === 'OPEN') {
+      statusBadgeClass = 'badge-success';
+      statusLabel = 'OPEN';
+    } else if (challenge.status === 'SOLUTION_SELECTED') {
+      statusBadgeClass = 'badge-primary';
+      statusLabel = 'SOLUTION SELECTED';
+    } else if (challenge.status === 'IMPLEMENTATION') {
+      statusBadgeClass = 'badge-primary';
+      statusLabel = 'IN PILOT IMPLEMENTATION';
+    } else if (challenge.status === 'UNDER_REVIEW') {
+      statusBadgeClass = 'badge-warning';
+      statusLabel = 'UNDER REVIEW';
+    }
+
+    const proposalsCount = challenge.interestedCount || challenge.solutionsCount || 0;
+    const deadlineFormatted = challenge.deadline ? new Date(challenge.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Rolling / Open';
+    const postedDate = challenge.createdAt ? new Date(challenge.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Aug 30, 2026';
+    const universitiesEngaged = (proposalsCount > 0 ? proposalsCount + 4 : 6);
+    const priorityText = challenge.priority || (challenge.sourceProblem && challenge.sourceProblem.priority) || 'HIGH';
+
+    const isCitizen = typeof user !== 'undefined' && user && (!user.role || user.role === 'citizen');
+    const isUniversity = typeof user !== 'undefined' && user && (user.role === 'university' || user.role === 'industry');
+    const isAuthority = typeof user !== 'undefined' && user && (user.role === 'authority' || user.role === 'admin');
+
+    // Lifecycle determination
+    let currentStageIndex = 2; // Default: Innovation Challenge
+    if (challenge.status === 'SOLUTION_SELECTED') currentStageIndex = 3;
+    else if (challenge.status === 'IMPLEMENTATION') currentStageIndex = 4;
+    else if (challenge.status === 'COMPLETED' || challenge.status === 'RESOLVED') currentStageIndex = 5;
+  %>
+
+  <% if (typeof user !== 'undefined' && user) { %>
+    <!-- Authenticated Citizen Portal Shell with Permanent Left Sidebar -->
+    <div class="dashboard-layout">
+      <!-- Reusable Sidebar -->
+      <%- include('partials/sidebar', { role: user.role || 'citizen', activePath: '/challenges' }) %>
+
+      <!-- Main Dashboard Content Area -->
+      <main id="main-content" class="dashboard-main">
+        <div class="dashboard-content">
+          <div class="challenge-detail-container">
+            
+            <!-- 1. Breadcrumb & Back Navigation -->
+            <div class="challenge-back-bar" style="margin-bottom: var(--space-4);">
+              <a href="/challenges" class="challenge-back-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>Explore Challenges</span>
+              </a>
+
+              <nav class="detail-breadcrumb" aria-label="Breadcrumb" style="margin-bottom: 0;">
+                <a href="/citizen/dashboard">Overview</a>
+                <span>/</span>
+                <a href="/challenges">Explore Challenges</a>
+                <span>/</span>
+                <span aria-current="page" style="color: var(--color-primary); font-weight: var(--font-weight-semibold);"><%= challenge.category %></span>
+              </nav>
+            </div>
+
+            <!-- 2. Two-Column Hero Section (Left: Image, Right: Header/Badges/Skills) -->
+            <div class="challenge-detail-hero-2col">
+              
+              <!-- Left: Challenge Hero Image (280–340px) -->
+              <div class="challenge-detail-hero-img-wrap">
+                <img 
+                  src="<%= heroImage %>" 
+                  alt="<%= challenge.title %> cover image" 
+                  class="challenge-detail-hero-img" 
+                  loading="lazy"
+                  onerror="this.onerror=null; this.src='/images/jharkhand-hero.jpg';"
+                />
+              </div>
+
+              <!-- Right: Badges, Title, Summary, Skills -->
+              <div style="display: flex; flex-direction: column; justify-content: center;">
+                
+                <!-- Category & Status Badges Row -->
+                <div class="challenge-badges-row">
+                  <span class="badge badge-primary" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">
+                    <%= challenge.category || 'Water & Sanitation' %>
+                  </span>
+                  <span class="badge <%= statusBadgeClass %>" style="font-size: 0.75rem; letter-spacing: 0.04em;">
+                    <%= statusLabel %>
+                  </span>
+                </div>
+
+                <!-- Title (38–46px on desktop) -->
+                <h1 class="challenge-main-title" style="margin-bottom: var(--space-2);">
+                  <%= challenge.title %>
+                </h1>
+
+                <!-- Short Summary Description -->
+                <p class="challenge-main-desc" style="font-size: 0.9375rem; margin-bottom: var(--space-4);">
+                  <%= challenge.description %>
+                </p>
+
+                <!-- Skill Tags -->
+                <% if (challenge.requiredSkills && challenge.requiredSkills.length > 0) { %>
+                  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <% challenge.requiredSkills.forEach(function(sk) { %>
+                      <span class="challenge-skill-chip"><%= sk %></span>
+                    <% }); %>
+                  </div>
+                <% } %>
+
+              </div>
+
+            </div>
+
+            <!-- 3. Horizontal Metadata Bar -->
+            <div class="challenge-meta-grid" style="grid-template-columns: repeat(4, 1fr);">
+              
+              <!-- Location -->
+              <div class="challenge-meta-cell">
+                <div class="challenge-meta-icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+                <div class="challenge-meta-cell-body">
+                  <span class="challenge-meta-label">Location</span>
+                  <span class="challenge-meta-val"><%= challenge.location || 'Latehar, Jharkhand' %></span>
+                </div>
+              </div>
+
+              <!-- Solution Proposals -->
+              <div class="challenge-meta-cell">
+                <div class="challenge-meta-icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+                <div class="challenge-meta-cell-body">
+                  <span class="challenge-meta-label">Solution Proposals</span>
+                  <span class="challenge-meta-val"><%= proposalsCount %> Proposals</span>
+                </div>
+              </div>
+
+              <!-- Submission Deadline -->
+              <div class="challenge-meta-cell">
+                <div class="challenge-meta-icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div class="challenge-meta-cell-body">
+                  <span class="challenge-meta-label">Deadline</span>
+                  <span class="challenge-meta-val"><%= deadlineFormatted %></span>
+                </div>
+              </div>
+
+              <!-- Priority -->
+              <div class="challenge-meta-cell">
+                <div class="challenge-meta-icon" aria-hidden="true" style="color: <%= priorityText === 'CRITICAL' || priorityText === 'HIGH' ? 'var(--color-danger)' : 'var(--color-primary)' %>;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                </div>
+                <div class="challenge-meta-cell-body">
+                  <span class="challenge-meta-label">Priority</span>
+                  <span class="challenge-meta-val" style="color: <%= priorityText === 'CRITICAL' || priorityText === 'HIGH' ? 'var(--color-danger)' : 'var(--color-text)' %>;"><%= priorityText %></span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 4. Main Two-Column Content Area -->
+            <div class="challenge-detail-2col">
+              
+              <!-- LEFT COLUMN (~68%): Detailed Content & Lifecycle -->
+              <div class="challenge-main-sections">
+                
+                <!-- Card 1: About This Challenge -->
+                <section class="detail-section">
+                  <h2 class="detail-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>About This Challenge</span>
+                  </h2>
+
+                  <div class="detail-text">
+                    <p style="margin-bottom: var(--space-4);">
+                      <%= challenge.description %>
+                    </p>
+
+                    <!-- Originating Citizen Report Quote -->
+                    <% if (challenge.sourceProblem && challenge.sourceProblem.description) { %>
+                      <blockquote style="margin: var(--space-4) 0; padding: var(--space-4); background-color: var(--color-surface-soft); border-left: 3px solid var(--color-primary); border-radius: 0 var(--radius-md) var(--radius-md) 0; font-size: var(--font-size-sm); color: var(--color-text);">
+                        <strong style="color: var(--color-primary); display: block; margin-bottom: 4px;">Originating Ground Citizen Report:</strong>
+                        <%= challenge.sourceProblem.description %>
+                        <% if (challenge.sourceProblem.location) { %>
+                          <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: 6px;">
+                            📍 Reported at <%= challenge.sourceProblem.location %>
+                          </div>
+                        <% } %>
+                      </blockquote>
+                    <% } %>
+                  </div>
+
+                  <!-- What Needs to Be Solved -->
+                  <div style="margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-border-subtle);">
+                    <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text); margin-bottom: var(--space-3);">
+                      What Needs to Be Solved
+                    </h3>
+                    
+                    <% if (challenge.constraints && challenge.constraints.length > 0) { %>
+                      <ul class="detail-list">
+                        <% challenge.constraints.forEach(function(c) { %>
+                          <li class="detail-list-item">
+                            <span class="detail-list-bullet"></span>
+                            <span><%= c %></span>
+                          </li>
+                        <% }); %>
+                      </ul>
+                    <% } else { %>
+                      <ul class="detail-list">
+                        <li class="detail-list-item">
+                          <span class="detail-list-bullet"></span>
+                          <span>Develop a field-deployable retrofit prototype suitable for local municipal conditions.</span>
+                        </li>
+                        <li class="detail-list-item">
+                          <span class="detail-list-bullet"></span>
+                          <span>Ensure low-power telemetry and compatibility with regional environmental factors.</span>
+                        </li>
+                        <li class="detail-list-item">
+                          <span class="detail-list-bullet"></span>
+                          <span>Provide open data telemetry integration with the district administrative portal.</span>
+                        </li>
+                      </ul>
+                    <% } %>
+                  </div>
+
+                  <!-- Expected Solution Outcome -->
+                  <% if (challenge.expectedOutcome) { %>
+                    <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle);">
+                      <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text); margin-bottom: var(--space-2);">
+                        Expected Solution Outcome
+                      </h3>
+                      <p style="font-size: var(--font-size-sm); color: var(--color-text); line-height: 1.6; margin: 0;">
+                        <%= challenge.expectedOutcome %>
+                      </p>
+                    </div>
+                  <% } %>
+                </section>
+
+                <!-- Card 2: Challenge Lifecycle Vertical Timeline -->
+                <section class="detail-section">
+                  <h2 class="detail-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                      <polyline points="2 17 12 22 22 17"></polyline>
+                      <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                    <span>Challenge Lifecycle</span>
+                  </h2>
+
+                  <div class="challenge-lifecycle-track">
+                    
+                    <div class="lifecycle-step <%= currentStageIndex >= 0 ? (currentStageIndex === 0 ? 'active' : 'completed') : '' %>">
+                      <span class="lifecycle-step-dot"></span>
+                      <div>
+                        <strong>✓ Problem Identified:</strong> Citizen submitted ground report in Jharkhand portal
+                      </div>
+                    </div>
+
+                    <div class="lifecycle-step <%= currentStageIndex >= 1 ? (currentStageIndex === 1 ? 'active' : 'completed') : '' %>">
+                      <span class="lifecycle-step-dot"></span>
+                      <div>
+                        <strong>✓ Authority Verified:</strong> Municipal & district officials verified severity
+                      </div>
+                    </div>
+
+                    <div class="lifecycle-step <%= currentStageIndex >= 2 ? (currentStageIndex === 2 ? 'active' : 'completed') : '' %>">
+                      <span class="lifecycle-step-dot"></span>
+                      <div>
+                        <strong><%= currentStageIndex === 2 ? '●' : (currentStageIndex > 2 ? '✓' : '○') %> Innovation Challenge:</strong> Published for university & innovation partner solutions
+                      </div>
+                    </div>
+
+                    <div class="lifecycle-step <%= currentStageIndex >= 3 ? (currentStageIndex === 3 ? 'active' : 'completed') : '' %>">
+                      <span class="lifecycle-step-dot"></span>
+                      <div>
+                        <strong><%= currentStageIndex === 3 ? '●' : (currentStageIndex > 3 ? '✓' : '○') %> University Solutions:</strong> Engineering proposals evaluated & shortlisted
+                      </div>
+                    </div>
+
+                    <div class="lifecycle-step <%= currentStageIndex >= 4 ? (currentStageIndex === 4 ? 'active' : 'completed') : '' %>">
+                      <span class="lifecycle-step-dot"></span>
+                      <div>
+                        <strong><%= currentStageIndex === 4 ? '●' : (currentStageIndex > 4 ? '✓' : '○') %> Pilot Implementation:</strong> Field testing & grant disbursement underway
+                      </div>
+                    </div>
+
+                    <div class="lifecycle-step <%= currentStageIndex >= 5 ? (currentStageIndex === 5 ? 'active' : 'completed') : '' %>">
+                      <span class="lifecycle-step-dot"></span>
+                      <div>
+                        <strong><%= currentStageIndex === 5 ? '●' : '○' %> Impact Measurement:</strong> Citizen satisfaction & long-term resolution verified
+                      </div>
+                    </div>
+
+                  </div>
+                </section>
+
+              </div>
+
+              <!-- RIGHT COLUMN (~32%): Sticky Challenge Overview Card -->
+              <aside class="challenge-sidebar-wrap">
+                <div class="challenge-sticky-card">
+                  
+                  <div class="challenge-sticky-header">
+                    <span class="badge <%= statusBadgeClass %>" style="font-size: 0.6875rem; letter-spacing: 0.04em; margin-bottom: var(--space-2);">
+                      <%= statusLabel %>
+                    </span>
+                    <h3 class="challenge-sticky-title">Challenge Overview</h3>
+                  </div>
+
+                  <ul class="challenge-sticky-facts">
+                    <li class="challenge-sticky-fact-row">
+                      <span class="challenge-sticky-fact-label">Status</span>
+                      <span class="challenge-sticky-fact-val" style="color: var(--color-primary);"><%= statusLabel %></span>
+                    </li>
+                    <li class="challenge-sticky-fact-row">
+                      <span class="challenge-sticky-fact-label">Category</span>
+                      <span class="challenge-sticky-fact-val"><%= challenge.category %></span>
+                    </li>
+                    <li class="challenge-sticky-fact-row">
+                      <span class="challenge-sticky-fact-label">Posted On</span>
+                      <span class="challenge-sticky-fact-val"><%= postedDate %></span>
+                    </li>
+                    <li class="challenge-sticky-fact-row">
+                      <span class="challenge-sticky-fact-label">Universities Engaged</span>
+                      <span class="challenge-sticky-fact-val"><%= universitiesEngaged %> Universities</span>
+                    </li>
+                    <li class="challenge-sticky-fact-row">
+                      <span class="challenge-sticky-fact-label">Total Proposals</span>
+                      <span class="challenge-sticky-fact-val"><%= proposalsCount %></span>
+                    </li>
+                  </ul>
+
+                  <!-- Primary & Secondary Actions -->
+                  <div class="challenge-sticky-actions">
+                    <% if (isUniversity) { %>
+                      <a href="/university/submit-solution?challengeId=<%= challenge._id %>" class="btn btn-primary btn-block" style="margin-bottom: var(--space-2);">
+                        Submit Solution Proposal
+                      </a>
+                    <% } else if (isAuthority) { %>
+                      <a href="/authority/challenges" class="btn btn-primary btn-block" style="margin-bottom: var(--space-2);">
+                        Manage Challenge
+                      </a>
+                    <% } else { %>
+                      <!-- Citizen View CTA -->
+                      <a href="/challenges" class="btn btn-primary btn-block" style="margin-bottom: var(--space-2);">
+                        View Challenge Updates
+                      </a>
+                    <% } %>
+
+                    <button type="button" class="btn btn-outline btn-block btn-save-challenge" id="btnSaveChallenge" data-challenge-id="<%= challenge._id %>">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right: 4px;">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                      </svg>
+                      <span id="saveChallengeText">Save Challenge</span>
+                    </button>
+                  </div>
+
+                  <!-- Government-grade verification stamp -->
+                  <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; gap: var(--space-2); font-size: 0.6875rem; color: var(--color-text-muted);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-success); flex-shrink: 0;">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Verified Official State Innovation Challenge</span>
+                  </div>
+
+                </div>
+              </aside>
+
+            </div>
+
+            <!-- 5. Related Innovation Challenges (3 Compact Cards) -->
+            <% if (typeof relatedChallenges !== 'undefined' && relatedChallenges && relatedChallenges.length > 0) { %>
+              <section class="related-challenges-section">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+                  <div>
+                    <h2 class="related-challenges-title">Related Innovation Challenges</h2>
+                    <p class="related-challenges-desc" style="margin-bottom: 0;">
+                      Explore more verified civic challenges across Jharkhand's technical and infrastructure ecosystem.
+                    </p>
+                  </div>
+                  <a href="/challenges" style="color: var(--color-primary); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); text-decoration: none;">
+                    View all challenges &rarr;
+                  </a>
+                </div>
+
+                <div class="related-challenges-grid">
+                  <% relatedChallenges.forEach(function(rc) { 
+                    let rcImage = rc.image || (rc.images && rc.images.length > 0 ? rc.images[0] : null) || (rc.sourceProblem && rc.sourceProblem.images && rc.sourceProblem.images.length > 0 ? rc.sourceProblem.images[0] : null);
+                    if (!rcImage) {
+                      const cat = (rc.category || '').toLowerCase();
+                      if (cat.includes('water') || cat.includes('sanitation')) rcImage = '/images/challenge-water.jpg';
+                      else if (cat.includes('agri') || cat.includes('energy')) rcImage = '/images/challenge-agriculture.jpg';
+                      else if (cat.includes('edu') || cat.includes('digital')) rcImage = '/images/challenge-education.jpg';
+                      else rcImage = '/images/jharkhand-hero.jpg';
+                    }
+
+                    const rcProposals = rc.interestedCount || rc.solutionsCount || 0;
+                    const rcDeadline = rc.deadline ? new Date(rc.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Rolling';
+                  %>
+                    <article class="challenge-card-spacious" style="display: flex; flex-direction: column;">
+                      <div class="challenge-card-spacious-img-wrap" style="height: 150px;">
+                        <img 
+                          src="<%= rcImage %>" 
+                          alt="<%= rc.title %>" 
+                          class="challenge-card-spacious-img" 
+                          loading="lazy"
+                          onerror="this.onerror=null; this.src='/images/jharkhand-hero.jpg';"
+                        />
+                      </div>
+                      
+                      <div class="challenge-card-spacious-body" style="padding: var(--space-4); display: flex; flex-direction: column; flex: 1;">
+                        <div class="challenge-card-spacious-badges" style="margin-bottom: var(--space-2);">
+                          <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= rc.category %></span>
+                          <span class="badge badge-neutral" style="font-size: 0.6875rem;"><%= rc.status ? rc.status.replace(/_/g, ' ') : 'OPEN' %></span>
+                        </div>
+
+                        <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); line-height: 1.35; margin: 0 0 var(--space-2) 0;">
+                          <a href="/challenges/<%= rc._id %>" style="color: inherit; text-decoration: none;">
+                            <%= rc.title %>
+                          </a>
+                        </h3>
+
+                        <p class="challenge-card-spacious-desc" style="font-size: var(--font-size-xs); margin-bottom: var(--space-3); -webkit-line-clamp: 2;">
+                          <%= rc.description %>
+                        </p>
+
+                        <div class="challenge-card-spacious-footer" style="margin-top: auto; padding-top: var(--space-3); border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: space-between;">
+                          <span style="font-size: 0.6875rem; color: var(--color-text-muted);">
+                            📍 <%= rc.location || 'Jharkhand' %> &bull; 👥 <%= rcProposals %>
+                          </span>
+                          <a href="/challenges/<%= rc._id %>" class="challenge-card-spacious-link" style="font-size: var(--font-size-xs);">
+                            View &rarr;
+                          </a>
+                        </div>
+                      </div>
+                    </article>
+                  <% }); %>
+                </div>
+              </section>
+            <% } %>
+
+          </div>
+        </div>
+      </main>
+    </div>
+  <% } else { %>
+    <!-- Public Visitor Layout -->
+    <header class="detail-header">
+      <div class="container">
+        <div class="challenge-back-bar" style="margin-bottom: var(--space-3);">
+          <a href="/challenges" class="challenge-back-link">
+            &larr; Back to Challenges
+          </a>
+        </div>
+        <div class="challenge-badges-row" style="margin-bottom: var(--space-2);">
+          <span class="badge badge-primary"><%= challenge.category %></span>
+          <span class="badge badge-neutral"><%= statusLabel %></span>
+        </div>
+        <h1 class="detail-title"><%= challenge.title %></h1>
+        <p style="font-size: var(--font-size-md); color: var(--color-text-muted); max-width: 800px; line-height: 1.6;">
+          <%= challenge.description %>
+        </p>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-content section">
+      <div class="container">
+        <div class="challenge-hero-img-wrap" style="height: 320px; margin-bottom: var(--space-8);">
+          <img 
+            src="<%= heroImage %>" 
+            alt="<%= challenge.title %>" 
+            class="challenge-hero-img" 
+            loading="lazy" 
+            onerror="this.onerror=null; this.src='/images/jharkhand-hero.jpg';"
+          />
+        </div>
+
+        <div class="detail-layout">
+          <div class="detail-content">
+            <section class="detail-section">
+              <h2 class="detail-section-title">Civic Problem Context</h2>
+              <p class="detail-text"><%= challenge.description %></p>
+            </section>
+          </div>
+
+          <aside class="detail-sidebar">
+            <div class="detail-action-card">
+              <h3 class="detail-card-title">Challenge Information</h3>
+              <p style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-4);">
+                Login to view full technical constraints, propose solutions, or track implementation.
+              </p>
+              <a href="/auth/login?redirect=/challenges/<%= challenge._id %>" class="btn btn-primary btn-block">
+                Login to Participate
+              </a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  <% } %>
+
+  <!-- Footer -->
+  <%- include('partials/footer') %>
+
+  <script>
+    // Client-side interactive save challenge toggle
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnSave = document.getElementById('btnSaveChallenge');
+      if (btnSave) {
+        let isSaved = false;
+        btnSave.addEventListener('click', () => {
+          isSaved = !isSaved;
+          const textSpan = document.getElementById('saveChallengeText');
+          if (isSaved) {
+            btnSave.classList.add('active');
+            btnSave.style.backgroundColor = 'var(--color-primary-subtle)';
+            btnSave.style.color = 'var(--color-primary)';
+            btnSave.style.borderColor = 'var(--color-primary)';
+            if (textSpan) textSpan.textContent = 'Challenge Saved';
+          } else {
+            btnSave.classList.remove('active');
+            btnSave.style.backgroundColor = '';
+            btnSave.style.color = '';
+            btnSave.style.borderColor = '';
+            if (textSpan) textSpan.textContent = 'Save Challenge';
+          }
+        });
+      }
+    });
+  </script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

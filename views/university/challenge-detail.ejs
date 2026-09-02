@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match Details: <%= challenge.title %> — SolveLink</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/challenges.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/university/challenges' }) %>
+
+  <!-- Dashboard Layout -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: user && user.role ? user.role : 'university', activePath: '/university/challenges' }) %>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Breadcrumbs -->
+        <div style="margin-bottom: var(--space-4);">
+          <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+            <a href="/university/dashboard">Innovator Portal</a>
+            <span>&bull;</span>
+            <a href="/university/challenges">Discovery</a>
+            <span>&bull;</span>
+            <span aria-current="page"><%= challenge.category %></span>
+          </nav>
+        </div>
+
+        <div class="detail-layout" style="padding-top: 0;">
+          
+          <!-- Left: Challenge Technical Specification -->
+          <div class="detail-content">
+            
+            <!-- Header Card -->
+            <div class="detail-section">
+              <span class="detail-gov-tag">Official Municipal Innovation Challenge</span>
+              <h1 class="detail-title" style="font-size: var(--font-size-2xl);"><%= challenge.title %></h1>
+              
+              <div class="detail-meta-bar">
+                <span class="badge badge-primary"><%= challenge.category %></span>
+                <span class="detail-meta-item">📍 <%= challenge.location || 'Jharkhand' %></span>
+                <span class="detail-meta-item">🏛 <%= challenge.department %></span>
+                <span class="badge badge-success">Accepting Proposals</span>
+              </div>
+            </div>
+
+            <!-- Problem Background -->
+            <div class="detail-section">
+              <h2 class="detail-section-title">Civic Problem Background</h2>
+              <div class="detail-text">
+                <p><%= challenge.description %></p>
+              </div>
+            </div>
+
+            <!-- Expected Outcome -->
+            <div class="detail-section">
+              <h2 class="detail-section-title">Expected Deliverables & Outcome</h2>
+              <div class="detail-text">
+                <p><%= challenge.expectedOutcome || 'A working pilot prototype, engineering design schematic, field-validation data, and deployment manual.' %></p>
+              </div>
+            </div>
+
+            <!-- Operational Constraints -->
+            <div class="detail-section">
+              <h2 class="detail-section-title">Operational Constraints</h2>
+              <% if (challenge.constraints && challenge.constraints.length > 0) { %>
+                <ul class="detail-list">
+                  <% challenge.constraints.forEach(function(item) { %>
+                    <li class="detail-list-item">
+                      <span class="detail-list-bullet"></span>
+                      <span><%= item %></span>
+                    </li>
+                  <% }); %>
+                </ul>
+              <% } else { %>
+                <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 0;">Standard municipal pilot constraints apply.</p>
+              <% } %>
+            </div>
+
+            <!-- Evaluation Criteria -->
+            <div class="detail-section">
+              <h2 class="detail-section-title">Official Evaluation Rubric</h2>
+              <% if (challenge.evaluationCriteria && challenge.evaluationCriteria.length > 0) { %>
+                <ul class="detail-list">
+                  <% challenge.evaluationCriteria.forEach(function(crit) { %>
+                    <li class="detail-list-item">
+                      <span class="detail-list-bullet"></span>
+                      <span><%= crit %></span>
+                    </li>
+                  <% }); %>
+                </ul>
+              <% } %>
+            </div>
+
+          </div>
+
+          <!-- Right: AI Match Analysis & Submission CTA -->
+          <aside class="detail-sidebar">
+            
+            <!-- AI Team Synergy Box -->
+            <div class="card card-body" style="border-top: 3px solid var(--color-primary);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
+                <span class="badge badge-primary" style="font-size: 0.6875rem;">AI Competency Match</span>
+                <span style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-primary);">
+                  <%= matchAnalysis.matchScore %>%
+                </span>
+              </div>
+
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2);">
+                Why this matches your team
+              </h2>
+              
+              <p style="font-size: var(--font-size-xs); line-height: var(--line-height-relaxed); color: var(--color-text-muted); margin-bottom: var(--space-4);">
+                <%= matchAnalysis.matchReason %>
+              </p>
+
+              <!-- Matching Skills -->
+              <div style="margin-bottom: var(--space-3);">
+                <div style="font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-success); margin-bottom: 4px;">
+                  ✔ Matching Team Capabilities:
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                  <% if (matchAnalysis.matchingSkills && matchAnalysis.matchingSkills.length > 0) { %>
+                    <% matchAnalysis.matchingSkills.forEach(function(s) { %>
+                      <span class="badge badge-success" style="font-size: 0.6875rem;"><%= s %></span>
+                    <% }); %>
+                  <% } else { %>
+                    <span class="text-muted" style="font-size: var(--font-size-xs);">No direct keyword matches</span>
+                  <% } %>
+                </div>
+              </div>
+
+              <!-- Missing Skills / Recommendations -->
+              <% if (matchAnalysis.missingSkills && matchAnalysis.missingSkills.length > 0) { %>
+                <div style="margin-bottom: var(--space-5);">
+                  <div style="font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-warning); margin-bottom: 4px;">
+                    ⚠ Recommended Collaborator Skills:
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                    <% matchAnalysis.missingSkills.forEach(function(s) { %>
+                      <span class="badge badge-warning" style="font-size: 0.6875rem;"><%= s %></span>
+                    <% }); %>
+                  </div>
+                </div>
+              <% } %>
+
+              <!-- Submission & Industry Support CTA -->
+              <% if (existingSubmission) { %>
+                <div style="background-color: var(--color-success-subtle); border: 1px solid rgba(62, 114, 85, 0.3); border-radius: var(--radius-md); padding: var(--space-4); text-align: center;">
+                  <span class="badge badge-success" style="margin-bottom: var(--space-2);">Proposal Submitted</span>
+                  <p style="font-size: var(--font-size-xs); color: var(--color-success); margin-bottom: 0;">
+                    Your proposal "<strong><%= existingSubmission.title %></strong>" is currently under review by the authority.
+                  </p>
+                </div>
+              <% } else if (user && user.role === 'industry') { %>
+                <a href="/university/submit-solution?challengeId=<%= challenge._id %>" class="btn btn-primary btn-block btn-lg" style="margin-bottom: var(--space-2);">
+                  Propose Implementation / Pilot &rarr;
+                </a>
+                
+                <form action="/university/challenges/<%= challenge._id %>/interest" method="POST" style="margin-bottom: var(--space-2);">
+                  <button type="submit" class="btn btn-outline btn-block btn-sm">
+                    🤝 Express Interest to Sponsor / Support Teams
+                  </button>
+                </form>
+
+                <p class="text-muted text-center" style="font-size: var(--font-size-xs); margin-bottom: 0;">
+                  Deadline: <%= challenge.deadline ? new Date(challenge.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Rolling' %>
+                </p>
+              <% } else { %>
+                <a href="/university/submit-solution?challengeId=<%= challenge._id %>" class="btn btn-primary btn-block btn-lg" style="margin-bottom: var(--space-2);">
+                  Submit Solution Proposal &rarr;
+                </a>
+                <p class="text-muted text-center" style="font-size: var(--font-size-xs); margin-bottom: 0;">
+                  Deadline: <%= challenge.deadline ? new Date(challenge.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Rolling' %>
+                </p>
+              <% } %>
+
+            </div>
+
+            <!-- Quick Metadata -->
+            <div class="card card-body">
+              <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3);">
+                Brief Metadata
+              </h3>
+              <ul class="detail-facts" style="margin-bottom: 0;">
+                <li class="detail-fact-row">
+                  <span class="detail-fact-label">Department</span>
+                  <span class="detail-fact-value"><%= challenge.department %></span>
+                </li>
+                <li class="detail-fact-row">
+                  <span class="detail-fact-label">Category</span>
+                  <span class="detail-fact-value"><%= challenge.category %></span>
+                </li>
+                <li class="detail-fact-row">
+                  <span class="detail-fact-label">Location</span>
+                  <span class="detail-fact-value"><%= challenge.location || 'Jharkhand' %></span>
+                </li>
+              </ul>
+            </div>
+
+          </aside>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

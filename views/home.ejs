@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolveLink — Real Problems. Local Minds. Real Impact.</title>
+  <meta name="description" content="A civic-tech innovation platform connecting citizen-reported problems with verified university researchers, innovators, and municipal authorities. (SIH26043)">
+  
+  <!-- SolveLink Design System Stylesheets -->
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/home.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('partials/navbar', { activePath: '/' }) %>
+
+  <!-- Main Content -->
+  <main id="main-content" class="main-content">
+
+    <!-- Hero Section: Two-Part Editorial Composition with Photographic Landscape & Floating Card -->
+    <section class="hero" aria-labelledby="hero-title">
+      <!-- Right-side Photographic Landscape with Left Fade Mask -->
+      <div class="hero-bg-scenery" aria-hidden="true">
+        <img 
+          src="/images/jharkhand-hero.jpg" 
+          alt="Natural landscape of rolling hills and forests in Jharkhand, India" 
+          class="hero-bg-img"
+        />
+        <div class="hero-bg-fade"></div>
+      </div>
+
+      <div class="container hero-container">
+        <div class="hero-grid">
+          
+          <!-- Hero Left: Content -->
+          <div class="hero-content">
+            <div class="hero-badge">
+              <span class="hero-badge-dot" aria-hidden="true"></span>
+              <span>Smart India Hackathon &bull; SIH26043</span>
+            </div>
+
+            <h1 id="hero-title" class="hero-title">
+              Real Problems.<br>
+              <span class="highlight-burgundy">Local Minds.</span><br>
+              Real Impact.
+            </h1>
+
+            <p class="hero-subtitle">
+              SolveLink connects communities in Jharkhand with students, universities and industry mentors to turn real challenges into practical solutions.
+            </p>
+
+            <div class="hero-actions">
+              <a href="/challenges" class="btn btn-primary btn-md">
+                <span>Explore Challenges</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+              <a href="/citizen/report-problem" class="btn btn-outline btn-md">
+                <span>+ Submit a Challenge</span>
+              </a>
+            </div>
+
+            <div class="hero-trust-bar">
+              <svg class="hero-trust-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span>Verified by District Authorities &bull; Backed by Academic &amp; Industry Partners</span>
+            </div>
+          </div>
+
+          <!-- Hero Right: Floating Featured Challenge Card Over Scenery -->
+          <div class="hero-card-column">
+            
+            <!-- Handwritten / Editorial Indicator -->
+            <div class="featured-indicator" aria-hidden="true">
+              <span class="featured-indicator-text">Featured Challenge</span>
+              <svg class="featured-indicator-arrow" width="34" height="26" viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3 C 16 3, 28 8, 24 20 M 18 16 L 24 20 L 30 14" />
+              </svg>
+            </div>
+
+            <!-- Floating White Card -->
+            <div class="hero-floating-card">
+              <div class="floating-card-body">
+                <div class="floating-card-meta">
+                  <span class="badge badge-primary">Water &amp; Sanitation</span>
+                  <span class="floating-card-location">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span>Ranchi District, Jharkhand</span>
+                  </span>
+                </div>
+
+                <h3 class="floating-card-title">
+                  <a href="/challenges">Low-Cost Sub-Surface Water Quality Sensor for Rural Arsenic Belts</a>
+                </h3>
+
+                <p class="floating-card-desc">
+                  Deploying decentralized solar-powered filtration telemetry across rural panchayats to alert village water committees before borewell contamination reaches hazardous levels.
+                </p>
+
+                <div class="floating-card-stats">
+                  <div class="floating-card-stat">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span><strong>14</strong> Teams Interested</span>
+                  </div>
+                  <div class="floating-card-stat">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>18 Days Left</span>
+                  </div>
+                </div>
+
+                <div class="floating-card-action">
+                  <a href="/challenges" class="floating-card-btn">
+                    <span>View Details</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Impact Numbers Strip -->
+    <section class="impact-strip" aria-label="Key Platform Metrics">
+      <div class="container">
+        <div class="impact-grid">
+          <div class="impact-item">
+            <span class="impact-number">140+</span>
+            <span class="impact-label">Verified Challenges</span>
+          </div>
+          <div class="impact-item">
+            <span class="impact-number">38</span>
+            <span class="impact-label">University Labs &amp; Institutes</span>
+          </div>
+          <div class="impact-item">
+            <span class="impact-number">&#8377;1.8 Cr</span>
+            <span class="impact-label">Pilot &amp; Implementation Grants</span>
+          </div>
+          <div class="impact-item">
+            <span class="impact-number">84%</span>
+            <span class="impact-label">Authority Review Rate</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Challenges Section (3-Card Horizontal Grid) -->
+    <section class="section" aria-labelledby="challenges-heading">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <span class="section-eyebrow">Innovation Challenges</span>
+            <h2 id="challenges-heading" class="section-title">Featured Challenges</h2>
+            <p class="section-subtitle">
+              Explore real-world problems from across Jharkhand and be part of the solution.
+            </p>
+          </div>
+          <a href="/challenges" class="section-action-link">
+            <span>View All Challenges</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+
+        <!-- 3-Card Grid Reusing challenge-card.ejs with Real Local Documentary Images -->
+        <div class="challenges-grid">
+          <% 
+            const defaultFeaturedList = [
+              {
+                _id: 'demo-c1',
+                title: 'Smart Sub-Surface Water Filtration for Rural Arsenic Belts',
+                category: 'Water & Sanitation',
+                location: 'Ranchi District, Jharkhand',
+                description: 'Deploying low-cost acoustic and telemetry sensors on community handpumps to ensure continuous drinking water access.',
+                image: '/images/challenge-water.jpg',
+                status: 'PUBLISHED',
+                interestedCount: 14,
+                deadline: new Date(Date.now() + 24 * 86400000 * 18)
+              },
+              {
+                _id: 'demo-c2',
+                title: 'Solar Cold-Storage for Tribal Forest Produce Cooperatives',
+                category: 'Agriculture & Energy',
+                location: 'Khunti, Jharkhand',
+                description: 'Designing off-grid micro cold storage solutions to preserve perishable forest products and boost tribal farmer income.',
+                image: '/images/challenge-agriculture.jpg',
+                status: 'PUBLISHED',
+                interestedCount: 8,
+                deadline: new Date(Date.now() + 24 * 86400000 * 22)
+              },
+              {
+                _id: 'demo-c3',
+                title: 'Solar Digital Classroom & Offline Learning Hub for Rural Schools',
+                category: 'Education & Digital',
+                location: 'Dumka, Jharkhand',
+                description: 'Deploying solar-powered localized interactive learning hubs and telemetry for remote primary schools across rural blocks.',
+                image: '/images/challenge-education.jpg',
+                status: 'PUBLISHED',
+                interestedCount: 19,
+                deadline: new Date(Date.now() + 24 * 86400000 * 30)
+              }
+            ];
+
+            const challengeList = (typeof challenges !== 'undefined' && challenges && challenges.length > 0) ? challenges : defaultFeaturedList;
+          %>
+
+          <% challengeList.slice(0, 3).forEach(function(c, idx) { 
+               // Ensure real image fallback if challenge document has no image
+               if (!c.image) {
+                 if (idx === 0) c.image = '/images/challenge-water.jpg';
+                 else if (idx === 1) c.image = '/images/challenge-agriculture.jpg';
+                 else c.image = '/images/challenge-education.jpg';
+               }
+          %>
+            <%- include('partials/challenge-card', { challenge: c }) %>
+          <% }); %>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section: 4-Stage Minimal Progression -->
+    <section class="section workflow-section" aria-labelledby="how-it-works-heading">
+      <div class="container">
+        <div class="text-center" style="max-width: 680px; margin: 0 auto var(--space-8) auto;">
+          <span class="section-eyebrow">The SolveLink Model</span>
+          <h2 id="how-it-works-heading" class="section-title">How It Works</h2>
+          <p class="section-subtitle" style="margin: 0 auto;">
+            A transparent, collaborative framework turning ground challenges into verified civic solutions.
+          </p>
+        </div>
+
+        <div class="workflow-steps">
+          <!-- Step 1: Find a Challenge -->
+          <div class="workflow-step">
+            <span class="workflow-num">01</span>
+            <h3 class="workflow-name">Find a Challenge</h3>
+            <p class="workflow-desc">
+              Explore open civic and infrastructure briefs verified by district departments across Jharkhand.
+            </p>
+          </div>
+
+          <!-- Step 2: Collaborate -->
+          <div class="workflow-step">
+            <span class="workflow-num">02</span>
+            <h3 class="workflow-name">Collaborate</h3>
+            <p class="workflow-desc">
+              Form multidisciplinary student, faculty, and industry teams matched by required skills.
+            </p>
+          </div>
+
+          <!-- Step 3: Build Solutions -->
+          <div class="workflow-step">
+            <span class="workflow-num">03</span>
+            <h3 class="workflow-name">Build Solutions</h3>
+            <p class="workflow-desc">
+              Prototype practical, low-cost engineering and technological interventions for evaluation.
+            </p>
+          </div>
+
+          <!-- Step 4: Create Impact -->
+          <div class="workflow-step">
+            <span class="workflow-num">04</span>
+            <h3 class="workflow-name">Create Impact</h3>
+            <p class="workflow-desc">
+              Deploy pilot implementations with municipal grants and track verified community outcomes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stakeholder Roles Section -->
+    <section class="section" aria-labelledby="stakeholders-heading">
+      <div class="container">
+        <div class="text-center" style="max-width: 640px; margin: 0 auto var(--space-8) auto;">
+          <span class="section-eyebrow">Ecosystem Participation</span>
+          <h2 id="stakeholders-heading" class="section-title">Built for Every Civic Stakeholder</h2>
+        </div>
+
+        <div class="stakeholders-grid">
+          <!-- Citizens -->
+          <div class="stakeholder-card">
+            <div class="stakeholder-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <h3 class="stakeholder-title">Citizens & Communities</h3>
+            <p class="stakeholder-desc">
+              Directly report neighborhood bottlenecks, track live resolution status, and upvote critical civic priorities.
+            </p>
+            <a href="/citizen/report-problem" class="btn btn-outline-primary btn-sm">Report a Problem &rarr;</a>
+          </div>
+
+          <!-- Universities -->
+          <div class="stakeholder-card">
+            <div class="stakeholder-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+            </div>
+            <h3 class="stakeholder-title">Universities & Innovators</h3>
+            <p class="stakeholder-desc">
+              Channel academic research and student innovation into funded pilot projects with measurable real-world adoption.
+            </p>
+            <a href="/challenges" class="btn btn-outline-primary btn-sm">Browse Challenges &rarr;</a>
+          </div>
+
+          <!-- Authorities -->
+          <div class="stakeholder-card">
+            <div class="stakeholder-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3 class="stakeholder-title">Government Authorities</h3>
+            <p class="stakeholder-desc">
+              Leverage local engineering talent, streamline problem validation, and deploy cost-effective civic solutions.
+            </p>
+            <a href="/auth/register?role=authority" class="btn btn-outline-primary btn-sm">Join as Authority &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom CTA Banner -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="cta-banner">
+          <div class="cta-banner-content">
+            <span class="badge badge-primary" style="margin-bottom: var(--space-3);">Join The Civic Movement</span>
+            <h2 class="cta-banner-title">Ready to solve a problem in your community?</h2>
+            <p class="cta-banner-desc">
+              Whether you are a citizen observing a local issue, or an engineering team looking for a meaningful challenge, SolveLink connects you with the right ecosystem.
+            </p>
+            <div class="cta-banner-actions">
+              <a href="/citizen/report-problem" class="btn btn-primary btn-lg">Report a Problem</a>
+              <a href="/challenges" class="btn btn-secondary btn-lg">Browse Open Challenges</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <%- include('partials/footer') %>
+
+  <!-- JavaScript -->
+  <script src="/js/main.js"></script>
+</body>
+</html>

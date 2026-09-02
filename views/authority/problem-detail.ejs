@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authority Triage: <%= problem.title %> — SolveLink</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/authority/problems' }) %>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'authority', activePath: '/authority/problems' }) %>
+
+    <!-- Main Content -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Breadcrumb & Top Bar -->
+        <div style="margin-bottom: var(--space-4);">
+          <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+            <a href="/authority/dashboard">Authority Console</a>
+            <span>&bull;</span>
+            <a href="/authority/problems">Triage Queue</a>
+            <span>&bull;</span>
+            <span aria-current="page"><%= problem._id %></span>
+          </nav>
+        </div>
+
+        <% if (typeof successMsg !== 'undefined' && successMsg) { %>
+          <div class="alert alert-success" style="margin-bottom: var(--space-4);">
+            <span><%= successMsg %></span>
+          </div>
+        <% } %>
+
+        <div class="problem-detail-grid">
+          
+          <!-- Left: Evidence & Problem Details -->
+          <div class="problem-main-content">
+            
+            <!-- 1. Header Information -->
+            <div class="problem-section">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2);">
+                <div style="display: flex; align-items: center; gap: var(--space-2);">
+                  <span class="badge badge-primary"><%= problem.category %></span>
+                  <span class="badge <%= problem.priority === 'CRITICAL' ? 'badge-danger' : 'badge-neutral' %>"><%= problem.priority %> Priority</span>
+                </div>
+
+                <% 
+                  let badgeClass = 'badge-neutral';
+                  if (problem.status === 'VERIFIED') badgeClass = 'badge-success';
+                  else if (problem.status === 'CHALLENGE_CREATED') badgeClass = 'badge-primary';
+                  else if (problem.status === 'UNDER_VERIFICATION') badgeClass = 'badge-warning';
+                  else if (problem.status === 'REJECTED') badgeClass = 'badge-danger';
+                %>
+                <span class="badge <%= badgeClass %>">Current Status: <%= problem.status.replace('_', ' ') %></span>
+              </div>
+
+              <h1 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); line-height: 1.2; margin-bottom: var(--space-3);">
+                <%= problem.title %>
+              </h1>
+
+              <div style="display: flex; align-items: center; gap: var(--space-4); font-size: var(--font-size-xs); color: var(--color-text-muted); flex-wrap: wrap;">
+                <span>📍 Location: <strong><%= problem.location %></strong>
+                  <% if (problem.latitude && problem.longitude) { %>
+                    <span style="font-family: var(--font-mono); font-size: 0.6875rem; background: var(--color-bg); padding: 1px 5px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); margin-left: 4px;">
+                      <%= Number(problem.latitude).toFixed(4) %>, <%= Number(problem.longitude).toFixed(4) %>
+                    </span>
+                  <% } %>
+                </span>
+                <span>&bull;</span>
+                <span>Reported by: <strong><%= problem.reportedBy ? problem.reportedBy.name : 'Citizen' %></strong> (<%= problem.reportedBy?.email || 'Registered Citizen' %>)</span>
+                <span>&bull;</span>
+                <span>Submitted: <%= new Date(problem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                <span>&bull;</span>
+                <span>Community Backing: <strong><%= problem.supporters ? problem.supporters.length : 1 %> Upvotes</strong></span>
+              </div>
+            </div>
+
+            <!-- 2. Detailed Ground Description -->
+            <div class="problem-section">
+              <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3);">
+                Citizen Report & Ground Context
+              </h2>
+              <div class="detail-text">
+                <p style="white-space: pre-line;"><%= problem.description %></p>
+              </div>
+
+              <!-- Evidence Photos -->
+              <% if (problem.images && problem.images.length > 0) { %>
+                <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-top: var(--space-6); margin-bottom: var(--space-2);">
+                  Field Evidence Photos (<%= problem.images.length %>)
+                </h3>
+                <div class="evidence-gallery">
+                  <% problem.images.forEach(function(imgUrl) { %>
+                    <div class="evidence-thumb">
+                      <img src="<%= imgUrl %>" alt="Evidence photo" loading="lazy" onerror="this.parentElement.style.display='none';" />
+                    </div>
+                  <% }); %>
+                </div>
+              <% } else { %>
+                <p class="text-muted" style="font-size: var(--font-size-xs); margin-top: var(--space-4); margin-bottom: 0;">
+                  No photo attachments were uploaded with this submission.
+                </p>
+              <% } %>
+            </div>
+
+            <!-- 3. AI Triage & Classification Engine Recommendations -->
+            <div class="ai-analysis-card">
+              <div class="ai-analysis-header">
+                <div style="display: flex; align-items: center; gap: var(--space-2);">
+                  <span class="ai-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    AI Decision Support
+                  </span>
+                  <span class="text-muted" style="font-size: var(--font-size-xs);">Triage Analysis Summary</span>
+                </div>
+                <span class="text-muted" style="font-size: var(--font-size-xs);">Confidence: 92%</span>
+              </div>
+
+              <div class="ai-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+                <div class="ai-metric-pill">
+                  <div class="ai-metric-title">Category</div>
+                  <div class="ai-metric-val" style="color: var(--color-primary);"><%= problem.category %></div>
+                </div>
+
+                <%
+                  const rawSentiment = (problem.sentiment && problem.sentiment.label) ? problem.sentiment.label : (problem.aiAnalysis && problem.aiAnalysis.sentiment ? problem.aiAnalysis.sentiment.label : 'neutral');
+                  const sentimentLabel = rawSentiment.charAt(0).toUpperCase() + rawSentiment.slice(1);
+                  const sentimentScore = problem.sentiment && problem.sentiment.score !== undefined ? problem.sentiment.score : (problem.aiAnalysis && problem.aiAnalysis.sentiment ? problem.aiAnalysis.sentiment.score : 0.5);
+                  let sentimentColor = 'var(--color-text)';
+                  if (rawSentiment === 'negative') sentimentColor = 'var(--color-danger)';
+                  else if (rawSentiment === 'positive') sentimentColor = 'var(--color-success)';
+                %>
+                <div class="ai-metric-pill">
+                  <div class="ai-metric-title">Sentiment</div>
+                  <div class="ai-metric-val" style="color: <%= sentimentColor %>;">
+                    <%= sentimentLabel %>
+                    <span style="font-size: 0.6875rem; font-weight: var(--font-weight-normal); color: var(--color-text-muted); display: block;">
+                      Score: <%= Number(sentimentScore).toFixed(2) %>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="ai-metric-pill">
+                  <div class="ai-metric-title">Severity</div>
+                  <div class="ai-metric-val" style="color: <%= problem.severity === 'CRITICAL' ? 'var(--color-danger)' : 'var(--color-text)' %>;">
+                    <%= problem.severity || 'MEDIUM' %>
+                  </div>
+                </div>
+
+                <% 
+                  const hasDuplicates = problem.similarProblems && problem.similarProblems.length > 0;
+                  const duplicateText = hasDuplicates ? 'Potential Duplicate' : 'Unique Report';
+                  const duplicateColor = hasDuplicates ? 'var(--color-warning)' : 'var(--color-success)';
+                %>
+                <div class="ai-metric-pill">
+                  <div class="ai-metric-title">Duplicate Status</div>
+                  <div class="ai-metric-val" style="color: <%= duplicateColor %>;">
+                    <%= duplicateText %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sentiment & Severity Guidance Note -->
+              <p class="text-muted" style="font-size: var(--font-size-xs); margin-top: var(--space-3); margin-bottom: var(--space-3); line-height: 1.4;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Sentiment indicates the emotional tone of the report and is used as a supporting signal. It does not determine severity by itself.
+              </p>
+
+              <% if (problem.aiAnalysis && problem.aiAnalysis.summary) { %>
+                <div style="background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-3);">
+                  <span style="font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; color: var(--color-text-muted); display: block; margin-bottom: 2px;">
+                    AI Brief Summary:
+                  </span>
+                  <p style="font-size: var(--font-size-sm); margin-bottom: 0; line-height: var(--line-height-relaxed);">
+                    <%= problem.aiAnalysis.summary %>
+                  </p>
+                </div>
+              <% } %>
+
+              <% if (problem.aiAnalysis && problem.aiAnalysis.tags && problem.aiAnalysis.tags.length > 0) { %>
+                <div style="display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;">
+                  <span style="font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: var(--font-weight-medium);">Extracted Engineering Tags:</span>
+                  <% problem.aiAnalysis.tags.forEach(function(tag) { %>
+                    <span class="badge badge-neutral" style="font-size: 0.6875rem;"><%= tag %></span>
+                  <% }); %>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- 4. Similar & Duplicate Problem Candidates -->
+            <% if (problem.similarProblems && problem.similarProblems.length > 0) { %>
+              <div class="problem-section" style="border-left: 3px solid var(--color-warning);">
+                <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2); color: var(--color-warning);">
+                  Duplicate Candidates & Linked Reports
+                </h2>
+                <p class="text-muted" style="font-size: var(--font-size-xs); margin-bottom: var(--space-4);">
+                  The duplicate detection service flagged these existing reports for potential overlap:
+                </p>
+
+                <div class="dash-problem-list">
+                  <% problem.similarProblems.forEach(function(sim) { %>
+                    <div class="dash-problem-card">
+                      <div class="dash-problem-info">
+                        <span class="dash-problem-title"><%= sim.title %></span>
+                        <div class="dash-problem-meta">
+                          <span><%= sim.category %></span>
+                          <span>&bull;</span>
+                          <span><%= sim.location %></span>
+                          <span>&bull;</span>
+                          <span>Status: <%= sim.status %></span>
+                        </div>
+                      </div>
+                      <a href="/authority/problems/<%= sim._id %>" class="btn btn-outline btn-sm">Inspect &rarr;</a>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+            <% } %>
+
+            <!-- 5. Associated Challenge if already created -->
+            <% if (associatedChallenge) { %>
+              <div class="problem-section" style="border-left: 3px solid var(--color-success); background-color: var(--color-success-subtle);">
+                <span class="badge badge-success" style="margin-bottom: var(--space-2);">Innovation Challenge Published</span>
+                <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2);">
+                  <%= associatedChallenge.title %>
+                </h2>
+                <p style="font-size: var(--font-size-sm); margin-bottom: var(--space-3);">
+                  This verified problem is currently an active challenge open for university and industry proposals.
+                </p>
+                <div style="display: flex; gap: var(--space-2);">
+                  <a href="/challenges/<%= associatedChallenge._id %>" class="btn btn-primary btn-sm">View Challenge Brief</a>
+                  <a href="/authority/solutions?challengeId=<%= associatedChallenge._id %>" class="btn btn-secondary btn-sm">View Received Solutions</a>
+                </div>
+              </div>
+            <% } %>
+
+          </div>
+
+          <!-- Right: Authority Decision & Action Panel -->
+          <aside style="display: flex; flex-direction: column; gap: var(--space-6);">
+            
+            <!-- Authority Action Console -->
+            <div class="card card-body" style="border-top: 3px solid var(--color-primary);">
+              <span class="badge badge-primary" style="margin-bottom: var(--space-2);">Administrative Actions</span>
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: var(--space-4);">
+                Triage Decision
+              </h2>
+
+              <!-- Status Update Form -->
+              <form action="/authority/problems/<%= problem._id %>/status" method="POST" style="margin-bottom: var(--space-5);">
+                <label for="statusSelect" class="form-label">Set Verification Status</label>
+                <select id="statusSelect" name="status" class="form-select" style="margin-bottom: var(--space-3);">
+                  <option value="UNDER_VERIFICATION" <%= problem.status === 'UNDER_VERIFICATION' ? 'selected' : '' %>>Under Verification / Field Inspection</option>
+                  <option value="VERIFIED" <%= problem.status === 'VERIFIED' ? 'selected' : '' %>>Verified (Legitimate Problem)</option>
+                  <option value="ALREADY_RESOLVED" <%= problem.status === 'ALREADY_RESOLVED' ? 'selected' : '' %>>Already Resolved by Department</option>
+                  <option value="REJECTED" <%= problem.status === 'REJECTED' ? 'selected' : '' %>>Reject / Invalid Report</option>
+                  <option value="REPORTED" <%= problem.status === 'REPORTED' ? 'selected' : '' %>>Reset to Reported</option>
+                </select>
+
+                <button type="submit" class="btn btn-secondary btn-block btn-sm">
+                  Update Problem Status
+                </button>
+              </form>
+
+              <hr class="divider" style="margin: var(--space-4) 0;" />
+
+              <!-- Primary CTA: Convert into Innovation Challenge -->
+              <h3 style="font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-2);">
+                Elevate to Innovation Brief
+              </h3>
+              <a href="/authority/create-challenge?problemId=<%= problem._id %>" class="btn btn-primary btn-block btn-lg" style="margin-bottom: var(--space-2);">
+                + Create Innovation Challenge
+              </a>
+              <p class="text-muted text-center" style="font-size: var(--font-size-xs); margin-bottom: 0;">
+                Transforms verified ground report into a funded challenge for university teams.
+              </p>
+            </div>
+
+            <!-- Quick Meta Info -->
+            <div class="card card-body">
+              <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3);">
+                Report Metadata
+              </h3>
+              <ul class="detail-facts" style="margin-bottom: 0;">
+                <li class="detail-fact-row">
+                  <span class="detail-fact-label">Report ID</span>
+                  <span class="detail-fact-value" style="font-family: var(--font-mono); font-size: 11px;"><%= problem._id %></span>
+                </li>
+                <li class="detail-fact-row">
+                  <span class="detail-fact-label">Urgency Indicator</span>
+                  <span class="detail-fact-value"><%= problem.severity || 'MEDIUM' %></span>
+                </li>
+                <li class="detail-fact-row">
+                  <span class="detail-fact-label">Supporter Count</span>
+                  <span class="detail-fact-value"><%= problem.supporters ? problem.supporters.length : 1 %></span>
+                </li>
+              </ul>
+            </div>
+
+          </aside>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

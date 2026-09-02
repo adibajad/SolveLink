@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report a Problem — SolveLink</title>
+  
+  <!-- Leaflet CSS for OpenStreetMap Interactive Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/forms.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/citizen/report-problem' }) %>
+
+  <!-- Dashboard Layout -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'citizen', activePath: '/citizen/report-problem' }) %>
+
+    <!-- Main Content -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <div class="report-form-container">
+          
+          <div style="margin-bottom: var(--space-6);">
+            <a href="/citizen/dashboard" class="btn btn-ghost btn-sm" style="margin-bottom: var(--space-2);">&larr; Back to Dashboard</a>
+            <h1 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-1);">Report a Civic Problem</h1>
+            <p class="text-muted" style="font-size: var(--font-size-sm);">
+              Submit ground-level infrastructure, sanitation, or health bottlenecks. Our AI engine categorizes and checks for existing duplicates to ensure rapid authority review.
+            </p>
+          </div>
+
+          <!-- AI Assistance Callout Banner -->
+          <div class="ai-helper-banner">
+            <svg class="ai-helper-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+            </svg>
+            <div>
+              <strong>AI Auto-Categorization:</strong> You do not need to know which government department handles this issue. SolveLink AI analyzes your description, estimates severity, and routes it to the designated municipal or district authority.
+            </div>
+          </div>
+
+          <!-- Error Alert -->
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="form-alert form-alert-error" role="alert">
+              <span><%= error %></span>
+            </div>
+          <% } %>
+
+          <!-- Report Form Card -->
+          <div class="report-card">
+            <form action="/citizen/report-problem" method="POST" enctype="multipart/form-data" id="reportProblemForm" novalidate>
+              
+              <!-- 1. Problem Title -->
+              <div class="form-group" id="groupProblemTitle">
+                <label for="problemTitle" class="form-label">
+                  <span>Problem Summary / Title <span class="required-indicator" aria-hidden="true">*</span></span>
+                </label>
+                <input 
+                  type="text" 
+                  id="problemTitle" 
+                  name="title" 
+                  class="form-input" 
+                  placeholder="e.g. Severely cracked culvert causing waterlogging near Indiranagar Market" 
+                  value="<%= typeof formData !== 'undefined' && formData.title ? formData.title : '' %>" 
+                  required
+                />
+                <div class="field-error-text" id="titleError" style="display: none;">
+                  Please enter a clear problem summary or title.
+                </div>
+              </div>
+
+              <!-- 2. Interactive Location Section -->
+              <div class="form-group" id="groupProblemLocation">
+                <div class="location-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-2);">
+                  <label for="problemLocation" class="form-label" style="margin-bottom: 0;">
+                    <span>Location / Landmark / Ward <span class="required-indicator" aria-hidden="true">*</span></span>
+                  </label>
+                  <button type="button" id="btnUseCurrentLocation" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-xs); padding: 0.35rem 0.75rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                    </svg>
+                    <span id="locationBtnText">Use My Current Location</span>
+                  </button>
+                </div>
+
+                <!-- Interactive Leaflet Map Container -->
+                <div class="map-wrapper" style="margin-bottom: var(--space-3);">
+                  <div id="problemMap" class="problem-map-container" style="height: 260px; width: 100%; border-radius: var(--radius-md); border: 1px solid var(--color-border); background-color: var(--color-bg); z-index: 1;"></div>
+                  <div class="map-help-bar" style="display: flex; justify-content: space-between; align-items: center; font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: 6px; flex-wrap: wrap; gap: 4px;">
+                    <span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                      You can drag the pin or click on the map to select the exact problem location.
+                    </span>
+                    <span id="geoStatusText" style="font-weight: var(--font-weight-medium); color: var(--color-primary);"></span>
+                  </div>
+                </div>
+
+                <!-- Selected Location Text Input -->
+                <div style="margin-bottom: var(--space-3);">
+                  <label for="problemLocation" class="form-label" style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                    Selected Location / Address <span class="required-indicator">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="problemLocation" 
+                    name="location" 
+                    class="form-input" 
+                    placeholder="e.g. Ward 14, Indiranagar 100ft Road, Bengaluru / Ranchi, Jharkhand" 
+                    value="<%= typeof formData !== 'undefined' && formData.location ? formData.location : '' %>" 
+                    required
+                  />
+                  <input type="hidden" id="locationTextInput" name="locationText" value="<%= typeof formData !== 'undefined' && (formData.locationText || formData.location) ? (formData.locationText || formData.location) : '' %>" />
+                </div>
+
+                <!-- Latitude and Longitude Fields -->
+                <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+                  <div>
+                    <label for="latitudeInput" class="form-label" style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                      Latitude <span class="required-indicator">*</span>
+                    </label>
+                    <input 
+                      type="number" 
+                      step="any" 
+                      id="latitudeInput" 
+                      name="latitude" 
+                      class="form-input" 
+                      placeholder="e.g. 23.3441" 
+                      value="<%= typeof formData !== 'undefined' && formData.latitude ? formData.latitude : '' %>" 
+                      readonly
+                      style="background-color: var(--color-bg); font-family: var(--font-mono); font-size: var(--font-size-xs);"
+                    />
+                  </div>
+                  <div>
+                    <label for="longitudeInput" class="form-label" style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                      Longitude <span class="required-indicator">*</span>
+                    </label>
+                    <input 
+                      type="number" 
+                      step="any" 
+                      id="longitudeInput" 
+                      name="longitude" 
+                      class="form-input" 
+                      placeholder="e.g. 85.3096" 
+                      value="<%= typeof formData !== 'undefined' && formData.longitude ? formData.longitude : '' %>" 
+                      readonly
+                      style="background-color: var(--color-bg); font-family: var(--font-mono); font-size: var(--font-size-xs);"
+                    />
+                  </div>
+                </div>
+
+                <div class="field-error-text" id="locationError" style="display: none;">
+                  Please select a valid location on the map and specify the address.
+                </div>
+              </div>
+
+              <!-- 3. Detailed Description -->
+              <div class="form-group" id="groupProblemDesc">
+                <label for="problemDesc" class="form-label">
+                  <span>Detailed Description of the Issue <span class="required-indicator" aria-hidden="true">*</span></span>
+                </label>
+                <textarea 
+                  id="problemDesc" 
+                  name="description" 
+                  class="form-textarea" 
+                  rows="5" 
+                  placeholder="Explain the background: How long has this problem existed? How many families/residents are impacted? What are the immediate risks?" 
+                  required
+                ><%= typeof formData !== 'undefined' && formData.description ? formData.description : '' %></textarea>
+                <div class="field-error-text" id="descError" style="display: none;">
+                  Please provide a detailed description of the issue.
+                </div>
+              </div>
+
+              <!-- 4. Mandatory Category Hint, Urgency & Affected People -->
+              <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3);">
+                
+                <div class="form-group" id="groupOptionalCategory">
+                  <label for="optionalCategory" class="form-label">
+                    <span>Category Hint <span class="required-indicator" aria-hidden="true">*</span></span>
+                    <span class="form-label-optional">AI Auto-Detect is enabled</span>
+                  </label>
+                  <select id="optionalCategory" name="optionalCategory" class="form-select">
+                    <% const selectedCat = typeof formData !== 'undefined' && formData.optionalCategory ? formData.optionalCategory : ''; %>
+                    <option value="" <%= selectedCat === '' ? 'selected' : '' %>>Let SolveLink AI Auto-Detect</option>
+                    <option value="Infrastructure" <%= selectedCat === 'Infrastructure' ? 'selected' : '' %>>Infrastructure (Roads, Bridges, Lights)</option>
+                    <option value="Water & Sanitation" <%= selectedCat === 'Water & Sanitation' ? 'selected' : '' %>>Water & Sanitation (Pipes, Sewage, Wells)</option>
+                    <option value="Public Health" <%= selectedCat === 'Public Health' ? 'selected' : '' %>>Public Health (Clinics, Epidemics, Hazards)</option>
+                    <option value="Agriculture & Energy" <%= selectedCat === 'Agriculture & Energy' ? 'selected' : '' %>>Agriculture & Energy (Crops, Storage, Power)</option>
+                    <option value="Waste Management" <%= selectedCat === 'Waste Management' ? 'selected' : '' %>>Waste Management (Garbage, Plastic, Dumps)</option>
+                    <option value="Education & Digital" <%= selectedCat === 'Education & Digital' ? 'selected' : '' %>>Education & Digital Access</option>
+                  </select>
+                  <div class="field-error-text" id="categoryError" style="display: none;">
+                    Please select a category hint or choose 'Let SolveLink AI Auto-Detect'.
+                  </div>
+                </div>
+
+                <div class="form-group" id="groupUrgency">
+                  <label class="form-label">
+                    <span>Citizen Urgency Assessment <span class="required-indicator" aria-hidden="true">*</span></span>
+                  </label>
+                  <% const currentUrgency = typeof formData !== 'undefined' && formData.urgency ? formData.urgency : 'MEDIUM'; %>
+                  <div class="urgency-grid">
+                    <label class="urgency-option">
+                      <input type="radio" name="urgency" value="LOW" <%= currentUrgency === 'LOW' ? 'checked' : '' %>>
+                      <div class="urgency-box">Low</div>
+                    </label>
+                    <label class="urgency-option">
+                      <input type="radio" name="urgency" value="MEDIUM" <%= currentUrgency === 'MEDIUM' ? 'checked' : '' %>>
+                      <div class="urgency-box">Medium</div>
+                    </label>
+                    <label class="urgency-option">
+                      <input type="radio" name="urgency" value="HIGH" <%= currentUrgency === 'HIGH' ? 'checked' : '' %>>
+                      <div class="urgency-box">High</div>
+                    </label>
+                  </div>
+                  <div class="field-error-text" id="urgencyError" style="display: none;">
+                    Please select one urgency level (Low, Medium, or High).
+                  </div>
+                </div>
+
+                <div class="form-group" id="groupAffectedPeople">
+                  <label for="affectedPeople" class="form-label">
+                    <span>Affected Population</span>
+                    <span class="form-label-optional">Optional</span>
+                  </label>
+                  <% const currentAffected = typeof formData !== 'undefined' && formData.affectedPeople ? formData.affectedPeople : ''; %>
+                  <select id="affectedPeople" name="affectedPeople" class="form-select">
+                    <option value="" <%= currentAffected === '' ? 'selected' : '' %>>Select approximate impact...</option>
+                    <option value="Only me" <%= currentAffected === 'Only me' ? 'selected' : '' %>>Only me</option>
+                    <option value="2–10 people" <%= currentAffected === '2–10 people' ? 'selected' : '' %>>2–10 people / families</option>
+                    <option value="11–50 people" <%= currentAffected === '11–50 people' ? 'selected' : '' %>>11–50 people / families</option>
+                    <option value="51–100 people" <%= currentAffected === '51–100 people' ? 'selected' : '' %>>51–100 people / families</option>
+                    <option value="100+ people" <%= currentAffected === '100+ people' ? 'selected' : '' %>>100+ people (Entire ward/area)</option>
+                  </select>
+                </div>
+
+              </div>
+
+              <!-- Live Similar / Duplicate Problem Pre-Check Banner -->
+              <div id="duplicateCheckContainer" class="card card-body" style="display: none; margin-bottom: var(--space-5); border: 1px solid rgba(194, 139, 56, 0.35); background-color: rgba(194, 139, 56, 0.04);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-2);">
+                  <div style="display: flex; align-items: center; gap: var(--space-2);">
+                    <span class="badge badge-warning" style="font-size: 0.6875rem;">Duplicate Pre-Check</span>
+                    <strong style="font-size: var(--font-size-sm); color: var(--color-text);">Possible Existing Problems Found</strong>
+                  </div>
+                  <span id="duplicateCheckStatus" style="font-size: var(--font-size-xs); color: var(--color-text-muted);"></span>
+                </div>
+
+                <p style="font-size: var(--font-size-xs); color: var(--color-text-muted); line-height: 1.45; margin-bottom: var(--space-3);">
+                  We found existing reports in your area that may match your issue. Supporting an existing report elevates its priority with municipal authorities without creating redundant submissions.
+                </p>
+
+                <div id="duplicateMatchesList" style="display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3);">
+                  <!-- Populated by JS -->
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; padding-top: var(--space-2); border-top: 1px solid rgba(194, 139, 56, 0.2); font-size: var(--font-size-xs); flex-wrap: wrap; gap: var(--space-2);">
+                  <span style="color: var(--color-text-muted);">Is your issue a different problem?</span>
+                  <button type="button" id="btnDismissDuplicateCheck" class="btn btn-ghost btn-sm" style="font-size: var(--font-size-xs); padding: 0 4px; color: var(--color-text);">
+                    Continue with New Report &rarr;
+                  </button>
+                </div>
+              </div>
+
+              <!-- 5. Photo Upload Dropzone (Mandatory) -->
+              <div class="form-group" id="groupProblemImages">
+                <label class="form-label">
+                  <span>Photo Evidence / Field Images <span class="required-indicator" aria-hidden="true">*</span></span>
+                  <span class="form-label-optional">At least 1 required (max 5 images: JPEG, PNG, WebP)</span>
+                </label>
+
+                <div class="file-dropzone" id="problemDropzone">
+                  <svg class="file-dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                  <p style="font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text); margin-bottom: 2px;">
+                    Click to browse or drag and drop photos here
+                  </p>
+                  <p class="text-muted" style="font-size: var(--font-size-xs); margin-bottom: 0;">
+                    Clear photos help authorities and university engineering teams understand the challenge faster.
+                  </p>
+                  <input type="file" id="problemImages" name="images" accept="image/jpeg,image/png,image/webp" multiple style="display: none;" />
+                </div>
+
+                <div class="field-error-text" id="imagesError" style="display: none;">
+                  Please upload at least one photo (JPEG, PNG, or WebP up to 5MB) as field evidence.
+                </div>
+
+                <!-- Preview Grid Container -->
+                <div class="image-preview-grid" id="imagePreviewGrid"></div>
+              </div>
+
+              <!-- Submit CTA -->
+              <div style="display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-6);">
+                <a href="/citizen/dashboard" class="btn btn-outline">Cancel</a>
+                <button type="submit" id="btnSubmitProblem" class="btn btn-primary btn-lg">
+                  Submit Problem Report
+                </button>
+              </div>
+
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- AI Analysis Processing Modal Overlay -->
+  <div id="aiProcessingModal" class="ai-processing-modal" role="dialog" aria-modal="true" aria-labelledby="aiModalTitle">
+    <div class="ai-processing-card">
+      <div class="ai-spinner"></div>
+      <h2 id="aiModalTitle" style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2);">
+        SolveLink AI Processing
+      </h2>
+      <p class="text-muted" style="font-size: var(--font-size-xs); margin-bottom: 0;">
+        Analyzing problem characteristics and checking geographic registry...
+      </p>
+
+      <ul class="ai-steps-list">
+        <li id="aiStep1" class="ai-step-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Understanding problem description & location...</span>
+        </li>
+        <li id="aiStep2" class="ai-step-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Auto-categorizing civic domain & department...</span>
+        </li>
+        <li id="aiStep3" class="ai-step-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Scanning for existing similar community reports...</span>
+        </li>
+        <li id="aiStep4" class="ai-step-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Estimating severity & generating priority recommendation...</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script src="/js/problems.js"></script>
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

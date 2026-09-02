@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Innovation Challenge — SolveLink Authority</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/forms.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/authority/create-challenge' }) %>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'authority', activePath: '/authority/create-challenge' }) %>
+
+    <!-- Main Content -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <div class="report-form-container">
+          
+          <div style="margin-bottom: var(--space-6);">
+            <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+              <a href="/authority/dashboard">Authority Console</a>
+              <span>&bull;</span>
+              <a href="/authority/problems">Problems</a>
+              <span>&bull;</span>
+              <span aria-current="page">Create Innovation Challenge</span>
+            </nav>
+            <h1 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-1);">
+              Create Innovation Challenge
+            </h1>
+            <p class="text-muted" style="font-size: var(--font-size-sm);">
+              Formulate a structured technical brief for university labs, student innovators, and industry partners to submit pilot engineering proposals.
+            </p>
+          </div>
+
+          <!-- Prefill Banner if originating from a verified problem -->
+          <% if (sourceProblem) { %>
+            <div class="ai-helper-banner" style="background-color: var(--color-surface); border-color: var(--color-border);">
+              <svg class="ai-helper-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <div>
+                <strong>Linked Verified Problem:</strong> "<%= sourceProblem.title %>" reported in <%= sourceProblem.location %>. Form fields have been prefilled with citizen context and AI triage recommendations.
+              </div>
+            </div>
+          <% } %>
+
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="form-alert form-alert-error" role="alert">
+              <span><%= error %></span>
+            </div>
+          <% } %>
+
+          <!-- Challenge Creation Card -->
+          <div class="report-card">
+            <form action="/authority/create-challenge" method="POST">
+              <input type="hidden" name="sourceProblemId" value="<%= prefill.sourceProblemId || '' %>">
+
+              <!-- Challenge Title -->
+              <div class="form-group">
+                <label for="chTitle" class="form-label">Innovation Challenge Title</label>
+                <input 
+                  type="text" 
+                  id="chTitle" 
+                  name="title" 
+                  class="form-input" 
+                  placeholder="e.g. Smart Decentralized Water Filtration System for Arsenic Belts" 
+                  value="<%= prefill.title || '' %>" 
+                  required
+                />
+              </div>
+
+              <!-- Domain & Department -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="chCategory" class="form-label">Category</label>
+                  <select id="chCategory" name="category" class="form-select" required>
+                    <option value="Infrastructure" <%= prefill.category === 'Infrastructure' ? 'selected' : '' %>>Infrastructure</option>
+                    <option value="Water & Sanitation" <%= prefill.category === 'Water & Sanitation' ? 'selected' : '' %>>Water & Sanitation</option>
+                    <option value="Public Health" <%= prefill.category === 'Public Health' ? 'selected' : '' %>>Public Health</option>
+                    <option value="Agriculture & Energy" <%= prefill.category === 'Agriculture & Energy' ? 'selected' : '' %>>Agriculture & Energy</option>
+                    <option value="Waste Management" <%= prefill.category === 'Waste Management' ? 'selected' : '' %>>Waste Management</option>
+                    <option value="Education & Digital" <%= prefill.category === 'Education & Digital' ? 'selected' : '' %>>Education & Digital</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="chDept" class="form-label">Department / Agency Name</label>
+                  <input 
+                    type="text" 
+                    id="chDept" 
+                    name="department" 
+                    class="form-input" 
+                    placeholder="e.g. Department of Drinking Water & Sanitation, Govt of Jharkhand" 
+                    value="<%= prefill.department || '' %>" 
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Location & Target Jurisdiction -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="chLoc" class="form-label">Location / Target Geography</label>
+                  <input 
+                    type="text" 
+                    id="chLoc" 
+                    name="location" 
+                    class="form-input" 
+                    placeholder="e.g. Ranchi District, Jharkhand" 
+                    value="<%= prefill.location || '' %>" 
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="chDeadline" class="form-label">Submission Deadline</label>
+                  <input 
+                    type="date" 
+                    id="chDeadline" 
+                    name="deadline" 
+                    class="form-input" 
+                    value="<%= prefill.deadline || '' %>"
+                  />
+                </div>
+              </div>
+
+              <!-- Detailed Problem Statement Context -->
+              <div class="form-group">
+                <label for="chDesc" class="form-label">Context & Problem Brief</label>
+                <textarea 
+                  id="chDesc" 
+                  name="description" 
+                  class="form-textarea" 
+                  rows="4" 
+                  placeholder="Explain the background and why standard solutions have not succeeded..." 
+                  required
+                ><%= prefill.description || '' %></textarea>
+              </div>
+
+              <!-- Expected Outcome -->
+              <div class="form-group">
+                <label for="chOutcome" class="form-label">Target Expected Outcome & Deliverables</label>
+                <textarea 
+                  id="chOutcome" 
+                  name="expectedOutcome" 
+                  class="form-textarea" 
+                  rows="3" 
+                  placeholder="e.g. A functional field-tested prototype capable of 500L/hr filtration with zero grid electricity..."
+                ><%= prefill.expectedOutcome || '' %></textarea>
+              </div>
+
+              <!-- Technical Constraints -->
+              <div class="form-group">
+                <label for="chConstraints" class="form-label">
+                  <span>Operational & Cost Constraints</span>
+                  <span class="form-label-optional">Comma-separated</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="chConstraints" 
+                  name="constraints" 
+                  class="form-input" 
+                  placeholder="e.g. Unit cost under ₹15,000, Locally serviceable components, Low maintenance" 
+                  value="<%= prefill.constraints || '' %>"
+                />
+              </div>
+
+              <!-- Required Skills -->
+              <div class="form-group">
+                <label for="chSkills" class="form-label">
+                  <span>Required Skills & Multidisciplinary Capabilities</span>
+                  <span class="form-label-optional">Comma-separated</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="chSkills" 
+                  name="requiredSkills" 
+                  class="form-input" 
+                  placeholder="e.g. IoT, Civil Engineering, Material Science, Renewable Energy" 
+                  value="<%= prefill.requiredSkills || '' %>"
+                />
+              </div>
+
+              <!-- Evaluation Criteria -->
+              <div class="form-group">
+                <label for="chCriteria" class="form-label">
+                  <span>Evaluation & Selection Rubric</span>
+                  <span class="form-label-optional">Comma-separated</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="chCriteria" 
+                  name="evaluationCriteria" 
+                  class="form-input" 
+                  placeholder="e.g. Technical Feasibility (30%), Cost Efficiency (25%), Community Impact (25%), Scalability (20%)" 
+                  value="<%= prefill.evaluationCriteria || '' %>"
+                />
+              </div>
+
+              <!-- Submit Actions -->
+              <div style="display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-8); padding-top: var(--space-5); border-top: 1px solid var(--color-border-subtle);">
+                <button type="submit" name="action" value="draft" class="btn btn-secondary btn-lg">
+                  Save as Draft
+                </button>
+                <button type="submit" name="action" value="publish" class="btn btn-primary btn-lg">
+                  Publish Innovation Challenge
+                </button>
+              </div>
+
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "solvelink",
+  "version": "1.0.0",
+  "description": "SolveLink - Real Problems. Local Minds. Real Impact. Problem Statement SIH26043",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "seed": "node scripts/seed.js"
+  },
+  "keywords": [
+    "solvelink",
+    "sih26043",
+    "express",
+    "ejs",
+    "mongoose",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.19.0",
+    "mongoose": "^8.9.5",
+    "multer": "^2.3.0"
+  }
+}

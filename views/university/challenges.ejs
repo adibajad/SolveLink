@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenge Discovery & Matching — SolveLink</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/challenges.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/university/challenges' }) %>
+
+  <!-- Dashboard Layout -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: user && user.role ? user.role : 'university', activePath: '/university/challenges' }) %>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Header -->
+        <div class="dashboard-topbar">
+          <div>
+            <h1 class="dashboard-welcome"><%= (user && user.role === 'industry') ? 'Industry Challenge Discovery & Opportunities' : 'Challenge Discovery & AI Matching' %></h1>
+            <p class="dashboard-sub">Explore active innovation briefs published by government authorities. Real-time scores indicate alignment with your registered capabilities.</p>
+          </div>
+          <div>
+            <a href="/university/submit-solution" class="btn btn-primary btn-md">
+              <%= (user && user.role === 'industry') ? '+ Propose Implementation' : '+ Submit Proposal' %>
+            </a>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <form action="/university/challenges" method="GET" class="filter-bar" style="margin-bottom: var(--space-6);">
+          <div class="filter-grid filter-grid-discovery">
+            
+            <div class="filter-group">
+              <label for="filterSearch" class="filter-label">Keyword Search</label>
+              <input 
+                type="text" 
+                id="filterSearch" 
+                name="q" 
+                class="filter-input" 
+                placeholder="Water, AI, IoT, Asphalt..." 
+                value="<%= typeof query !== 'undefined' && query.q ? query.q : '' %>"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="filterDomain" class="filter-label">Domain</label>
+              <select id="filterDomain" name="domain" class="filter-select">
+                <option value="">All Domains</option>
+                <option value="Infrastructure" <%= (typeof query !== 'undefined' && query.domain === 'Infrastructure') ? 'selected' : '' %>>Infrastructure</option>
+                <option value="Water & Sanitation" <%= (typeof query !== 'undefined' && query.domain === 'Water & Sanitation') ? 'selected' : '' %>>Water & Sanitation</option>
+                <option value="Public Health" <%= (typeof query !== 'undefined' && query.domain === 'Public Health') ? 'selected' : '' %>>Public Health</option>
+                <option value="Agriculture & Energy" <%= (typeof query !== 'undefined' && query.domain === 'Agriculture & Energy') ? 'selected' : '' %>>Agriculture & Energy</option>
+                <option value="Waste Management" <%= (typeof query !== 'undefined' && query.domain === 'Waste Management') ? 'selected' : '' %>>Waste Management</option>
+                <option value="Education & Digital" <%= (typeof query !== 'undefined' && query.domain === 'Education & Digital') ? 'selected' : '' %>>Education & Digital</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filterLocation" class="filter-label">Location</label>
+              <input 
+                type="text" 
+                id="filterLocation" 
+                name="location" 
+                class="filter-input" 
+                placeholder="e.g. Ranchi / Dhanbad" 
+                value="<%= typeof query !== 'undefined' && query.location ? query.location : '' %>"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="filterSkill" class="filter-label">Required Skill</label>
+              <select id="filterSkill" name="skill" class="filter-select">
+                <option value="">All Skills</option>
+                <option value="IoT" <%= (typeof query !== 'undefined' && query.skill === 'IoT') ? 'selected' : '' %>>IoT</option>
+                <option value="Computer Vision" <%= (typeof query !== 'undefined' && query.skill === 'Computer Vision') ? 'selected' : '' %>>Computer Vision</option>
+                <option value="Civil Engineering" <%= (typeof query !== 'undefined' && query.skill === 'Civil Engineering') ? 'selected' : '' %>>Civil Engineering</option>
+                <option value="Renewable Energy" <%= (typeof query !== 'undefined' && query.skill === 'Renewable Energy') ? 'selected' : '' %>>Renewable Energy</option>
+                <option value="Material Science" <%= (typeof query !== 'undefined' && query.skill === 'Material Science') ? 'selected' : '' %>>Material Science</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: flex-end; gap: var(--space-2);">
+              <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+              <% if (typeof query !== 'undefined' && (query.q || query.domain || query.location || query.skill)) { %>
+                <a href="/university/challenges" class="btn btn-ghost btn-sm">Clear</a>
+              <% } %>
+            </div>
+
+          </div>
+        </form>
+
+        <!-- Ranked Challenges List -->
+        <% if (challenges && challenges.length > 0) { %>
+          
+          <div class="dash-problem-list">
+            <% challenges.forEach(function(c) { 
+              let matchBadgeClass = 'badge-neutral';
+              if (c.matchScore >= 75) matchBadgeClass = 'badge-success';
+              else if (c.matchScore >= 50) matchBadgeClass = 'badge-warning';
+            %>
+              <div class="dash-problem-card" style="padding: var(--space-5);">
+                <div class="dash-problem-info">
+                  <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 3px;">
+                    <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= c.category %></span>
+                    <span class="badge <%= matchBadgeClass %>" style="font-size: 0.6875rem;">
+                      ★ <%= c.matchScore %>% Match
+                    </span>
+                    <span class="badge badge-neutral" style="font-size: 0.6875rem;">Open</span>
+                  </div>
+                  
+                  <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: 4px; color: var(--color-text);">
+                    <a href="/university/challenges/<%= c._id %>" style="color: inherit; text-decoration: none;"><%= c.title %></a>
+                  </h2>
+
+                  <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: var(--space-2); line-height: var(--line-height-base);">
+                    <%= c.description ? c.description.substring(0, 160) + '...' : '' %>
+                  </p>
+
+                  <div class="dash-problem-meta">
+                    <span>📍 <%= c.location || 'Jharkhand' %></span>
+                    <span>&bull;</span>
+                    <span>Dept: <%= c.department %></span>
+                    <% if (c.deadline) { %>
+                      <span>&bull;</span>
+                      <span>Due <%= new Date(c.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                    <% } %>
+                    <% if (c.matchingSkills && c.matchingSkills.length > 0) { %>
+                      <span>&bull;</span>
+                      <span style="color: var(--color-success); font-weight: var(--font-weight-semibold);">Matching: <%= c.matchingSkills.join(', ') %></span>
+                    <% } %>
+                  </div>
+                </div>
+                
+                <div class="dash-problem-side" style="flex-direction: column; align-items: flex-end; gap: var(--space-2);">
+                  <a href="/university/challenges/<%= c._id %>" class="btn btn-outline btn-sm btn-block">
+                    View Match Details
+                  </a>
+                  <a href="/university/submit-solution?challengeId=<%= c._id %>" class="btn btn-primary btn-sm btn-block">
+                    Submit Proposal &rarr;
+                  </a>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+
+        <% } else { %>
+          
+          <div class="state-box">
+            <svg class="state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <h2 class="state-title">No challenges match your criteria</h2>
+            <p class="state-desc">
+              Try adjusting your filter options or explore all open briefs.
+            </p>
+            <a href="/university/challenges" class="btn btn-secondary btn-sm">Reset Filters</a>
+          </div>
+
+        <% } %>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

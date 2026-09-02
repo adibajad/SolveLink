@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resources & Guidelines — SolveLink</title>
+  <meta name="description" content="Guidelines, toolkits, and documentation for citizens, university researchers, government authorities, and industry partners on SolveLink.">
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/challenges.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('partials/navbar', { activePath: '/resources' }) %>
+
+  <!-- Header -->
+  <header class="challenges-header">
+    <div class="container">
+      <div class="challenges-header-content">
+        <span class="badge badge-primary" style="margin-bottom: var(--space-2);">Knowledge & Documentation</span>
+        <h1 class="challenges-header-title">Resource Hub</h1>
+        <p class="challenges-header-desc">
+          Official frameworks, submission guidelines, evaluation rubrics, and toolkits for all participating civic stakeholders.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="main-content section">
+    <div class="container">
+      
+      <div class="grid grid-cols-3 gap-6" style="margin-bottom: var(--space-12);">
+        
+        <!-- 1. Citizens -->
+        <div class="resource-card">
+          <div class="resource-header">
+            <div class="resource-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: 0;">For Citizens</h2>
+              <span class="text-muted" style="font-size: var(--font-size-xs);">Community Reporting</span>
+            </div>
+          </div>
+          <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 0;">
+            Guidelines on capturing actionable photos, tagging accurate GPS coordinates, and rallying neighborhood support.
+          </p>
+          <ul class="resource-list">
+            <li class="resource-item">
+              <a href="/citizen/report-problem">
+                <span>Citizen Reporting Standard</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+            <li class="resource-item">
+              <a href="/about#guidelines">
+                <span>Community Upvoting Rules</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+            <li class="resource-item">
+              <a href="/about#privacy">
+                <span>Citizen Data Privacy Notice</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 2. Students & Researchers -->
+        <div class="resource-card">
+          <div class="resource-header">
+            <div class="resource-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: 0;">For Students & Researchers</h2>
+              <span class="text-muted" style="font-size: var(--font-size-xs);">Proposal & Prototyping</span>
+            </div>
+          </div>
+          <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 0;">
+            Templates for technical solution proposals, cost estimation frameworks, and team formation rules.
+          </p>
+          <ul class="resource-list">
+            <li class="resource-item">
+              <a href="/challenges">
+                <span>Proposal Submission Template</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+            <li class="resource-item">
+              <a href="/challenges">
+                <span>Cost Estimation Guidelines</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+            <li class="resource-item">
+              <a href="/about">
+                <span>IP & Open Source Guidelines</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 3. Government Authorities -->
+        <div class="resource-card">
+          <div class="resource-header">
+            <div class="resource-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: 0;">For Authorities</h2>
+              <span class="text-muted" style="font-size: var(--font-size-xs);">Verification & Evaluation</span>
+            </div>
+          </div>
+          <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 0;">
+            Protocols for vetting citizen reports, drafting innovation challenges, and standard evaluation scoring rubrics.
+          </p>
+          <ul class="resource-list">
+            <li class="resource-item">
+              <a href="/about#verification">
+                <span>Problem Verification Protocol</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+            <li class="resource-item">
+              <a href="/about">
+                <span>Challenge Definition Rubric</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+            <li class="resource-item">
+              <a href="/about">
+                <span>Pilot Grant Disbursement Flow</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 4. Universities & Institutional Labs -->
+        <div class="resource-card">
+          <div class="resource-header">
+            <div class="resource-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: 0;">For Universities</h2>
+              <span class="text-muted" style="font-size: var(--font-size-xs);">Academic Institutional Onboarding</span>
+            </div>
+          </div>
+          <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 0;">
+            Institutional onboarding frameworks, faculty mentorship credits, and university innovation cell integration.
+          </p>
+          <ul class="resource-list">
+            <li class="resource-item">
+              <a href="/auth/register?role=university">
+                <span>University Lab Onboarding Form</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+            <li class="resource-item">
+              <a href="/about">
+                <span>Academic Credit Equivalency Guide</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 5. Industry Partners -->
+        <div class="resource-card">
+          <div class="resource-header">
+            <div class="resource-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+                <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+                <path d="M10 6h4"></path>
+                <path d="M10 10h4"></path>
+                <path d="M10 14h4"></path>
+                <path d="M10 18h4"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: 0;">For Industry Partners</h2>
+              <span class="text-muted" style="font-size: var(--font-size-xs);">CSR & Commercialization</span>
+            </div>
+          </div>
+          <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 0;">
+            Protocols for co-funding student pilots, CSR capital deployment, and manufacturing scale-up partnerships.
+          </p>
+          <ul class="resource-list">
+            <li class="resource-item">
+              <a href="/auth/register?role=industry">
+                <span>CSR Innovation Sponsorship Brief</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+            <li class="resource-item">
+              <a href="/about">
+                <span>Technology Transfer Framework</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 6. SIH26043 Problem Statement Spec -->
+        <div class="resource-card" style="background-color: var(--color-surface-soft); border-color: #D3CCD0;">
+          <div class="resource-header">
+            <div class="resource-icon" style="background-color: var(--color-primary); color: #FFFFFF;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </div>
+            <div>
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: 0;">SIH26043 Reference</h2>
+              <span class="text-muted" style="font-size: var(--font-size-xs);">Specification & Standards</span>
+            </div>
+          </div>
+          <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 0;">
+            Full architecture, role matrices, status lifecycles, and technical benchmarks defined for SIH26043.
+          </p>
+          <ul class="resource-list">
+            <li class="resource-item">
+              <a href="/about">
+                <span>System Architecture Document</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+            <li class="resource-item">
+              <a href="/about">
+                <span>Role & Lifecycle Matrix</span>
+                <span class="text-muted">&rarr;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <%- include('partials/footer') %>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

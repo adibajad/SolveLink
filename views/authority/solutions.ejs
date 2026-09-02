@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solution Proposals Queue — SolveLink Authority</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/challenges.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/authority/solutions' }) %>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'authority', activePath: '/authority/solutions' }) %>
+
+    <!-- Main Content -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Header Topbar -->
+        <div class="dashboard-topbar">
+          <div>
+            <h1 class="dashboard-welcome">Solution Proposals & Evaluation</h1>
+            <p class="dashboard-sub">Review technical proposals from universities and industry innovators, evaluate against standardized rubrics, and award pilot implementation grants.</p>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <form action="/authority/solutions" method="GET" class="filter-bar" style="margin-bottom: var(--space-6);">
+          <div class="filter-grid filter-grid-solutions">
+            
+            <div class="filter-group">
+              <label for="filterChallenge" class="filter-label">Challenge</label>
+              <select id="filterChallenge" name="challengeId" class="filter-select">
+                <option value="">All Innovation Challenges</option>
+                <% if (typeof myChallenges !== 'undefined' && myChallenges) { %>
+                  <% myChallenges.forEach(function(c) { %>
+                    <option value="<%= c._id %>" <%= (typeof query !== 'undefined' && query.challengeId === c._id.toString()) ? 'selected' : '' %>>
+                      <%= c.title %>
+                    </option>
+                  <% }); %>
+                <% } %>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filterStatus" class="filter-label">Evaluation Status</label>
+              <select id="filterStatus" name="status" class="filter-select">
+                <option value="">All Statuses</option>
+                <option value="SUBMITTED" <%= (typeof query !== 'undefined' && query.status === 'SUBMITTED') ? 'selected' : '' %>>Submitted (Pending Review)</option>
+                <option value="UNDER_REVIEW" <%= (typeof query !== 'undefined' && query.status === 'UNDER_REVIEW') ? 'selected' : '' %>>Under Review</option>
+                <option value="SHORTLISTED" <%= (typeof query !== 'undefined' && query.status === 'SHORTLISTED') ? 'selected' : '' %>>Shortlisted</option>
+                <option value="SELECTED" <%= (typeof query !== 'undefined' && query.status === 'SELECTED') ? 'selected' : '' %>>Selected for Pilot</option>
+                <option value="REJECTED" <%= (typeof query !== 'undefined' && query.status === 'REJECTED') ? 'selected' : '' %>>Rejected</option>
+              </select>
+            </div>
+
+            <div></div>
+
+            <div style="display: flex; align-items: flex-end; gap: var(--space-2);">
+              <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+              <% if (typeof query !== 'undefined' && (query.status || query.challengeId)) { %>
+                <a href="/authority/solutions" class="btn btn-ghost btn-sm">Clear</a>
+              <% } %>
+            </div>
+
+          </div>
+        </form>
+
+        <!-- Solutions List -->
+        <% if (solutions && solutions.length > 0) { %>
+          
+          <div class="dash-problem-list">
+            <% solutions.forEach(function(sol) { 
+              let badgeClass = 'badge-neutral';
+              if (sol.status === 'SELECTED') badgeClass = 'badge-success';
+              else if (sol.status === 'SHORTLISTED') badgeClass = 'badge-primary';
+              else if (sol.status === 'SUBMITTED' || sol.status === 'UNDER_REVIEW') badgeClass = 'badge-warning';
+              else if (sol.status === 'REJECTED') badgeClass = 'badge-danger';
+            %>
+              <a href="/authority/solutions/<%= sol._id %>" class="dash-problem-card" style="padding: var(--space-5);">
+                <div class="dash-problem-info">
+                  <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 3px;">
+                    <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= sol.challenge?.category || 'Civic Tech' %></span>
+                    <span class="badge <%= badgeClass %>" style="font-size: 0.6875rem;"><%= sol.status.replace('_', ' ') %></span>
+                    <% if (sol.evaluation && sol.evaluation.score) { %>
+                      <span class="badge badge-neutral" style="font-size: 0.6875rem;">Score: <%= sol.evaluation.score %>/100</span>
+                    <% } %>
+                  </div>
+                  
+                  <span class="dash-problem-title" style="font-size: var(--font-size-base);"><%= sol.title %></span>
+                  
+                  <div class="dash-problem-meta" style="margin-top: 4px;">
+                    <span>👥 Team: <strong><%= sol.team?.name || sol.submittedBy?.name %></strong> (<%= sol.submittedBy?.organization || 'University/Lab' %>)</span>
+                    <span>&bull;</span>
+                    <span>Challenge: <%= sol.challenge?.title %></span>
+                    <span>&bull;</span>
+                    <span>Submitted: <%= new Date(sol.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                  </div>
+                </div>
+                
+                <div class="dash-problem-side">
+                  <span class="btn btn-primary btn-sm">Evaluate Rubric &rarr;</span>
+                </div>
+              </a>
+            <% }); %>
+          </div>
+
+        <% } else { %>
+          
+          <div class="state-box">
+            <svg class="state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <h2 class="state-title">No solutions submitted yet</h2>
+            <p class="state-desc">
+              University researchers and industry partners will submit proposals once innovation challenges are published.
+            </p>
+            <a href="/authority/create-challenge" class="btn btn-primary btn-sm">Create an Innovation Challenge</a>
+          </div>
+
+        <% } %>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

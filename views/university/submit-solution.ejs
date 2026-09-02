@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Solution Proposal — SolveLink</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/forms.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/university/submit-solution' }) %>
+
+  <!-- Dashboard Layout -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'university', activePath: '/university/submit-solution' }) %>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <div class="report-form-container">
+          
+          <!-- Explicit Confirmation State if Submitted -->
+          <% if (typeof isSubmitted !== 'undefined' && isSubmitted) { %>
+            
+            <div class="card card-body text-center" style="padding: var(--space-12) var(--space-8); border-top: 4px solid var(--color-success);">
+              <div style="width: 54px; height: 54px; border-radius: var(--radius-full); background-color: var(--color-success-subtle); color: var(--color-success); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4) auto;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+
+              <span class="badge badge-success" style="margin-bottom: var(--space-2);">Proposal Successfully Submitted</span>
+              
+              <h1 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3);">
+                Your Technical Proposal is Under Official Review
+              </h1>
+              
+              <p class="text-muted" style="max-width: 600px; margin: 0 auto var(--space-6) auto; line-height: var(--line-height-relaxed);">
+                Thank you, <strong><%= user.name %></strong>. Your proposal "<strong><%= submittedSolution ? submittedSolution.title : 'Solution' %></strong>" has been queued for evaluation by <strong><%= challenge.department %></strong>. You can track evaluation scoring and status updates in your dashboard.
+              </p>
+
+              <div style="display: flex; justify-content: center; gap: var(--space-3); flex-wrap: wrap;">
+                <a href="/university/dashboard" class="btn btn-primary btn-lg">Return to Innovator Dashboard</a>
+                <a href="/university/challenges" class="btn btn-secondary btn-lg">Explore More Challenges</a>
+              </div>
+            </div>
+
+          <% } else { %>
+
+            <!-- Submission Form Flow -->
+            <div style="margin-bottom: var(--space-6);">
+              <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+                <a href="/university/dashboard">Innovator Portal</a>
+                <span>&bull;</span>
+                <a href="/university/challenges">Challenges</a>
+                <span>&bull;</span>
+                <span aria-current="page">Submit Solution Proposal</span>
+              </nav>
+              <h1 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-1);">
+                Submit Solution Proposal
+              </h1>
+              <p class="text-muted" style="font-size: var(--font-size-sm);">
+                Present your university engineering or research solution to the governing authority for evaluation, shortlisting, and pilot grant funding.
+              </p>
+            </div>
+
+            <!-- Challenge Context Banner at Top -->
+            <div class="ai-helper-banner" style="background-color: var(--color-surface); border-color: var(--color-border);">
+              <svg class="ai-helper-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="7"></circle>
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+              </svg>
+              <div>
+                <span class="badge badge-primary" style="margin-bottom: 2px;"><%= challenge.category %></span>
+                <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: 2px;">
+                  Target Challenge: <%= challenge.title %>
+                </h2>
+                <div style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                  Authority: <strong><%= challenge.department %></strong> &bull; Location: <%= challenge.location || 'Jharkhand' %>
+                </div>
+              </div>
+            </div>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+              <div class="form-alert form-alert-error" role="alert">
+                <span><%= error %></span>
+              </div>
+            <% } %>
+
+            <!-- Proposal Submission Form Card -->
+            <div class="report-card">
+              <form action="/university/submit-solution" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="challengeId" value="<%= challenge._id %>">
+
+                <!-- 1. Proposal Title & Team Name -->
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="solTitle" class="form-label">Solution Title</label>
+                    <input 
+                      type="text" 
+                      id="solTitle" 
+                      name="title" 
+                      class="form-input" 
+                      placeholder="e.g. Gravity-Fed Granular Activated Carbon & Iron-Oxide Filtration Kit" 
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="solTeam" class="form-label">Project / Lab Team Name</label>
+                    <input 
+                      type="text" 
+                      id="solTeam" 
+                      name="teamName" 
+                      class="form-input" 
+                      placeholder="e.g. Environmental Hydraulics Innovation Lab" 
+                      value="<%= user.organization ? user.organization + ' Research Team' : user.name + ' Team' %>"
+                    />
+                  </div>
+                </div>
+
+                <!-- 2. Technical Description & Methodology -->
+                <div class="form-group">
+                  <label for="solDesc" class="form-label">Technical Description & Architecture</label>
+                  <textarea 
+                    id="solDesc" 
+                    name="description" 
+                    class="form-textarea" 
+                    rows="5" 
+                    placeholder="Describe your engineering architecture, working mechanism, materials, and pilot deployment strategy..." 
+                    required
+                  ></textarea>
+                </div>
+
+                <!-- 3. Technology Stack -->
+                <div class="form-group">
+                  <label for="solTech" class="form-label">
+                    <span>Technologies & Engineering Tools</span>
+                    <span class="form-label-optional">Comma-separated</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="solTech" 
+                    name="technology" 
+                    class="form-input" 
+                    placeholder="e.g. Embedded C, Microcontrollers, Chemical Adsorption, IoT Sensors" 
+                  />
+                </div>
+
+                <!-- 4. Cost Breakdown & Community Impact -->
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="solCost" class="form-label">Estimated Pilot Budget (&#8377; INR)</label>
+                    <input 
+                      type="number" 
+                      id="solCost" 
+                      name="estimatedCost" 
+                      class="form-input" 
+                      placeholder="e.g. 85000" 
+                      min="0" 
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="solImpact" class="form-label">Projected Community Impact</label>
+                    <input 
+                      type="text" 
+                      id="solImpact" 
+                      name="impact" 
+                      class="form-input" 
+                      placeholder="e.g. Treats 5,000L daily providing safe drinking water to 250 families" 
+                      required
+                    />
+                  </div>
+                </div>
+
+                <!-- 5. Team Composition Roster -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <span>Core Team Members & Contributors</span>
+                    <span class="form-label-optional">Lead & Key Engineers</span>
+                  </label>
+
+                  <div class="form-row" style="margin-bottom: var(--space-2);">
+                    <input type="text" name="memberNames[]" class="form-input" placeholder="Member 1 Name" value="<%= user.name %>" />
+                    <input type="email" name="memberEmails[]" class="form-input" placeholder="Member 1 Email" value="<%= user.email %>" />
+                    <input type="text" name="memberRoles[]" class="form-input" placeholder="Role (e.g. Lead Researcher)" value="Principal Investigator" />
+                  </div>
+
+                  <div class="form-row">
+                    <input type="text" name="memberNames[]" class="form-input" placeholder="Member 2 Name (Optional)" />
+                    <input type="email" name="memberEmails[]" class="form-input" placeholder="Member 2 Email" />
+                    <input type="text" name="memberRoles[]" class="form-input" placeholder="Role (e.g. Hardware Engineer)" />
+                  </div>
+                </div>
+
+                <!-- 6. File Attachments Upload -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <span>Proposal Documents / CAD Schematics</span>
+                    <span class="form-label-optional">PDF, DOCX, PNG (Max 3 files, 10MB each)</span>
+                  </label>
+
+                  <div class="file-dropzone" id="proposalDropzone" onclick="document.getElementById('solFiles').click();">
+                    <svg class="file-dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="12" y1="18" x2="12" y2="12"></line>
+                      <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                    <p style="font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text); margin-bottom: 2px;">
+                      Click to upload proposal document or design schematic
+                    </p>
+                    <input type="file" id="solFiles" name="attachments" multiple style="display: none;" />
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div style="display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle);">
+                  <a href="/university/challenges/<%= challenge._id %>" class="btn btn-outline">Cancel</a>
+                  <button type="submit" class="btn btn-primary btn-lg">
+                    Submit Proposal to Authority
+                  </button>
+                </div>
+
+              </form>
+            </div>
+
+          <% } %>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

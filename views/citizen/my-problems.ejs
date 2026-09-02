@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Reported Problems — SolveLink</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/challenges.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/citizen/my-problems' }) %>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'citizen', activePath: '/citizen/my-problems' }) %>
+
+    <!-- Main Content -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Header Topbar -->
+        <div class="dashboard-topbar">
+          <div>
+            <h1 class="dashboard-welcome">My Reported Problems</h1>
+            <p class="dashboard-sub">Review the verification progress, AI analysis, and community backing for your submissions.</p>
+          </div>
+          <div>
+            <a href="/citizen/report-problem" class="btn btn-primary btn-md">
+              + Report New Problem
+            </a>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <form action="/citizen/my-problems" method="GET" class="filter-bar" style="margin-bottom: var(--space-6);">
+          <div class="filter-grid filter-grid-citizen">
+            
+            <div class="filter-group">
+              <label for="filterSearch" class="filter-label">Search My Reports</label>
+              <input 
+                type="text" 
+                id="filterSearch" 
+                name="q" 
+                class="filter-input" 
+                placeholder="Search title or location..." 
+                value="<%= typeof query !== 'undefined' && query.q ? query.q : '' %>"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="filterStatus" class="filter-label">Status</label>
+              <select id="filterStatus" name="status" class="filter-select">
+                <option value="">All Statuses</option>
+                <option value="REPORTED" <%= (typeof query !== 'undefined' && query.status === 'REPORTED') ? 'selected' : '' %>>Reported</option>
+                <option value="UNDER_VERIFICATION" <%= (typeof query !== 'undefined' && query.status === 'UNDER_VERIFICATION') ? 'selected' : '' %>>Under Verification</option>
+                <option value="VERIFIED" <%= (typeof query !== 'undefined' && query.status === 'VERIFIED') ? 'selected' : '' %>>Verified</option>
+                <option value="CHALLENGE_CREATED" <%= (typeof query !== 'undefined' && query.status === 'CHALLENGE_CREATED') ? 'selected' : '' %>>Challenge Created</option>
+                <option value="ALREADY_RESOLVED" <%= (typeof query !== 'undefined' && query.status === 'ALREADY_RESOLVED') ? 'selected' : '' %>>Resolved</option>
+                <option value="REJECTED" <%= (typeof query !== 'undefined' && query.status === 'REJECTED') ? 'selected' : '' %>>Rejected</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filterCategory" class="filter-label">Category</label>
+              <select id="filterCategory" name="category" class="filter-select">
+                <option value="">All Categories</option>
+                <option value="Infrastructure" <%= (typeof query !== 'undefined' && query.category === 'Infrastructure') ? 'selected' : '' %>>Infrastructure</option>
+                <option value="Water & Sanitation" <%= (typeof query !== 'undefined' && query.category === 'Water & Sanitation') ? 'selected' : '' %>>Water & Sanitation</option>
+                <option value="Public Health" <%= (typeof query !== 'undefined' && query.category === 'Public Health') ? 'selected' : '' %>>Public Health</option>
+                <option value="Agriculture & Energy" <%= (typeof query !== 'undefined' && query.category === 'Agriculture & Energy') ? 'selected' : '' %>>Agriculture & Energy</option>
+                <option value="Waste Management" <%= (typeof query !== 'undefined' && query.category === 'Waste Management') ? 'selected' : '' %>>Waste Management</option>
+                <option value="Education & Digital" <%= (typeof query !== 'undefined' && query.category === 'Education & Digital') ? 'selected' : '' %>>Education & Digital</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: flex-end; gap: var(--space-2);">
+              <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+              <% if (typeof query !== 'undefined' && (query.q || query.status || query.category)) { %>
+                <a href="/citizen/my-problems" class="btn btn-ghost btn-sm">Clear</a>
+              <% } %>
+            </div>
+
+          </div>
+        </form>
+
+        <!-- Problem List or Empty State -->
+        <% if (problems && problems.length > 0) { %>
+          
+          <div class="dash-problem-list">
+            <% problems.forEach(function(prob) { 
+              let badgeClass = 'badge-neutral';
+              if (prob.status === 'VERIFIED') badgeClass = 'badge-success';
+              else if (prob.status === 'CHALLENGE_CREATED') badgeClass = 'badge-primary';
+              else if (prob.status === 'UNDER_VERIFICATION') badgeClass = 'badge-warning';
+              else if (prob.status === 'REJECTED') badgeClass = 'badge-danger';
+            %>
+              <a href="/problems/<%= prob._id %>" class="dash-problem-card" style="padding: var(--space-5);">
+                <div class="dash-problem-info">
+                  <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 2px;">
+                    <span class="badge badge-neutral" style="font-size: 0.6875rem;"><%= prob.category %></span>
+                    <span class="badge <%= badgeClass %>"><%= prob.status.replace('_', ' ') %></span>
+                  </div>
+                  <span class="dash-problem-title" style="font-size: var(--font-size-base);"><%= prob.title %></span>
+                  <div class="dash-problem-meta" style="margin-top: 4px;">
+                    <span>📍 <%= prob.location %></span>
+                    <span>&bull;</span>
+                    <span><%= prob.supporters ? prob.supporters.length : 1 %> Community Supporters</span>
+                    <span>&bull;</span>
+                    <span>Reported <%= new Date(prob.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                  </div>
+                </div>
+                
+                <div class="dash-problem-side">
+                  <span class="btn btn-outline btn-sm">View Details &rarr;</span>
+                </div>
+              </a>
+            <% }); %>
+          </div>
+
+        <% } else { %>
+          
+          <div class="state-box">
+            <svg class="state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <h2 class="state-title">No problems match your filter</h2>
+            <p class="state-desc">
+              You haven't reported any problems matching the selected criteria.
+            </p>
+            <a href="/citizen/report-problem" class="btn btn-primary btn-sm">Report a Problem</a>
+          </div>
+
+        <% } %>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

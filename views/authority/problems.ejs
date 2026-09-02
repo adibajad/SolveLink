@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Problem Triage Queue — SolveLink Authority</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/challenges.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/authority/problems' }) %>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'authority', activePath: '/authority/problems' }) %>
+
+    <!-- Main Content -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Header Topbar -->
+        <div class="dashboard-topbar">
+          <div>
+            <h1 class="dashboard-welcome">Problem Triage & Verification</h1>
+            <p class="dashboard-sub">Review citizen reports, inspect AI categorization, verify authenticity, and elevate into innovation challenges.</p>
+          </div>
+          <div>
+            <a href="/authority/create-challenge" class="btn btn-primary btn-md">
+              + Create Challenge
+            </a>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <form action="/authority/problems" method="GET" class="filter-bar" style="margin-bottom: var(--space-6);">
+          <div class="filter-grid filter-grid-authority">
+            
+            <!-- Search -->
+            <div class="filter-group">
+              <label for="filterSearch" class="filter-label">Search Reports</label>
+              <input 
+                type="text" 
+                id="filterSearch" 
+                name="q" 
+                class="filter-input" 
+                placeholder="Title, description, or landmark..." 
+                value="<%= typeof query !== 'undefined' && query.q ? query.q : '' %>"
+              />
+            </div>
+
+            <!-- Status -->
+            <div class="filter-group">
+              <label for="filterStatus" class="filter-label">Status</label>
+              <select id="filterStatus" name="status" class="filter-select">
+                <option value="">All Statuses</option>
+                <option value="REPORTED" <%= (typeof query !== 'undefined' && query.status === 'REPORTED') ? 'selected' : '' %>>Reported (New)</option>
+                <option value="UNDER_VERIFICATION" <%= (typeof query !== 'undefined' && query.status === 'UNDER_VERIFICATION') ? 'selected' : '' %>>Under Verification</option>
+                <option value="VERIFIED" <%= (typeof query !== 'undefined' && query.status === 'VERIFIED') ? 'selected' : '' %>>Verified</option>
+                <option value="CHALLENGE_CREATED" <%= (typeof query !== 'undefined' && query.status === 'CHALLENGE_CREATED') ? 'selected' : '' %>>Challenge Created</option>
+                <option value="ALREADY_RESOLVED" <%= (typeof query !== 'undefined' && query.status === 'ALREADY_RESOLVED') ? 'selected' : '' %>>Resolved</option>
+                <option value="REJECTED" <%= (typeof query !== 'undefined' && query.status === 'REJECTED') ? 'selected' : '' %>>Rejected / Invalid</option>
+              </select>
+            </div>
+
+            <!-- Category -->
+            <div class="filter-group">
+              <label for="filterCategory" class="filter-label">Category</label>
+              <select id="filterCategory" name="category" class="filter-select">
+                <option value="">All Categories</option>
+                <option value="Infrastructure" <%= (typeof query !== 'undefined' && query.category === 'Infrastructure') ? 'selected' : '' %>>Infrastructure</option>
+                <option value="Water & Sanitation" <%= (typeof query !== 'undefined' && query.category === 'Water & Sanitation') ? 'selected' : '' %>>Water & Sanitation</option>
+                <option value="Public Health" <%= (typeof query !== 'undefined' && query.category === 'Public Health') ? 'selected' : '' %>>Public Health</option>
+                <option value="Agriculture & Energy" <%= (typeof query !== 'undefined' && query.category === 'Agriculture & Energy') ? 'selected' : '' %>>Agriculture & Energy</option>
+                <option value="Waste Management" <%= (typeof query !== 'undefined' && query.category === 'Waste Management') ? 'selected' : '' %>>Waste Management</option>
+                <option value="Education & Digital" <%= (typeof query !== 'undefined' && query.category === 'Education & Digital') ? 'selected' : '' %>>Education & Digital</option>
+              </select>
+            </div>
+
+            <!-- Priority -->
+            <div class="filter-group">
+              <label for="filterPriority" class="filter-label">AI Priority</label>
+              <select id="filterPriority" name="priority" class="filter-select">
+                <option value="">All Priorities</option>
+                <option value="CRITICAL" <%= (typeof query !== 'undefined' && query.priority === 'CRITICAL') ? 'selected' : '' %>>Critical</option>
+                <option value="HIGH" <%= (typeof query !== 'undefined' && query.priority === 'HIGH') ? 'selected' : '' %>>High</option>
+                <option value="MEDIUM" <%= (typeof query !== 'undefined' && query.priority === 'MEDIUM') ? 'selected' : '' %>>Medium</option>
+                <option value="LOW" <%= (typeof query !== 'undefined' && query.priority === 'LOW') ? 'selected' : '' %>>Low</option>
+              </select>
+            </div>
+
+            <!-- Location -->
+            <div class="filter-group">
+              <label for="filterLocation" class="filter-label">Location</label>
+              <input 
+                type="text" 
+                id="filterLocation" 
+                name="location" 
+                class="filter-input" 
+                placeholder="e.g. Indiranagar / Ranchi" 
+                value="<%= typeof query !== 'undefined' && query.location ? query.location : '' %>"
+              />
+            </div>
+
+            <div style="display: flex; align-items: flex-end; gap: var(--space-2);">
+              <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+              <% if (typeof query !== 'undefined' && (query.q || query.status || query.category || query.priority || query.location)) { %>
+                <a href="/authority/problems" class="btn btn-ghost btn-sm">Clear</a>
+              <% } %>
+            </div>
+
+          </div>
+        </form>
+
+        <!-- Problem Triage List -->
+        <% if (problems && problems.length > 0) { %>
+          
+          <div class="dash-problem-list">
+            <% problems.forEach(function(prob) { 
+              let badgeClass = 'badge-neutral';
+              if (prob.status === 'VERIFIED') badgeClass = 'badge-success';
+              else if (prob.status === 'CHALLENGE_CREATED') badgeClass = 'badge-primary';
+              else if (prob.status === 'UNDER_VERIFICATION') badgeClass = 'badge-warning';
+              else if (prob.status === 'REJECTED') badgeClass = 'badge-danger';
+
+              let prioBadge = 'badge-neutral';
+              if (prob.priority === 'CRITICAL') prioBadge = 'badge-danger';
+              else if (prob.priority === 'HIGH') prioBadge = 'badge-warning';
+              else if (prob.priority === 'MEDIUM') prioBadge = 'badge-primary';
+            %>
+              <a href="/authority/problems/<%= prob._id %>" class="dash-problem-card" style="padding: var(--space-5);">
+                <div class="dash-problem-info">
+                  <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 3px;">
+                    <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= prob.category %></span>
+                    <span class="badge <%= prioBadge %>" style="font-size: 0.6875rem;"><%= prob.priority %> Priority</span>
+                    <span class="badge <%= badgeClass %>" style="font-size: 0.6875rem;"><%= prob.status.replace('_', ' ') %></span>
+                  </div>
+                  
+                  <span class="dash-problem-title" style="font-size: var(--font-size-base);"><%= prob.title %></span>
+                  
+                  <div class="dash-problem-meta" style="margin-top: 4px;">
+                    <span>📍 <%= prob.location %></span>
+                    <span>&bull;</span>
+                    <span>👥 <%= prob.supporters ? prob.supporters.length : 1 %> Community Supporters</span>
+                    <span>&bull;</span>
+                    <span>Reported by <%= prob.reportedBy ? prob.reportedBy.name : 'Citizen' %></span>
+                    <span>&bull;</span>
+                    <span><%= new Date(prob.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                  </div>
+                </div>
+                
+                <div class="dash-problem-side">
+                  <span class="btn btn-primary btn-sm">Triage & Actions &rarr;</span>
+                </div>
+              </a>
+            <% }); %>
+          </div>
+
+        <% } else { %>
+          
+          <div class="state-box">
+            <svg class="state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <h2 class="state-title">No problems match your triage filter</h2>
+            <p class="state-desc">
+              Try adjusting your search criteria or clear active filters.
+            </p>
+            <a href="/authority/problems" class="btn btn-secondary btn-sm">Reset Filters</a>
+          </div>
+
+        <% } %>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

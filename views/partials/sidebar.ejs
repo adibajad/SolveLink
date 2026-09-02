@@ -1,0 +1,161 @@
+<%
+  // Role & Route Resolution
+  const currentRole = (typeof user !== 'undefined' && user && user.role) ? user.role : (typeof role !== 'undefined' ? role : 'citizen');
+  const currentPath = typeof activePath !== 'undefined' ? activePath : '';
+
+  // Default Menu Configurations per Role
+  const roleMenus = {
+    citizen: [
+      { label: 'Overview', url: '/citizen/dashboard', icon: 'grid' },
+      { label: 'Report a Problem', url: '/citizen/report-problem', icon: 'plus-circle' },
+      { label: 'Community Problems', url: '/problems', icon: 'users' },
+      { label: 'My Reported Problems', url: '/citizen/my-problems', icon: 'file-text' },
+      { label: 'Explore Challenges', url: '/challenges', icon: 'compass' }
+    ],
+    authority: [
+      { label: 'Authority Dashboard', url: '/authority/dashboard', icon: 'grid' },
+      { label: 'Incoming Problems', url: '/authority/problems', icon: 'inbox' },
+      { label: 'Create Challenge', url: '/authority/create-challenge', icon: 'award' },
+      { label: 'Review Solutions', url: '/authority/solutions', icon: 'check-square' }
+    ],
+    university: [
+      { label: 'Research Dashboard', url: '/university/dashboard', icon: 'grid' },
+      { label: 'Active Challenges', url: '/university/challenges', icon: 'compass' },
+      { label: 'Submit Solution', url: '/university/submit-solution', icon: 'send' },
+      { label: 'Browse All Challenges', url: '/challenges', icon: 'layers' }
+    ],
+    industry: [
+      { label: 'Industry Dashboard', url: '/university/dashboard', icon: 'grid' },
+      { label: 'Partner Challenges', url: '/university/challenges', icon: 'compass' },
+      { label: 'Submit Proposal', url: '/university/submit-solution', icon: 'send' },
+      { label: 'Explore Challenges', url: '/challenges', icon: 'layers' }
+    ],
+    admin: [
+      { label: 'Admin Overview', url: '/dashboard', icon: 'grid' },
+      { label: 'All Problems', url: '/authority/problems', icon: 'inbox' },
+      { label: 'All Challenges', url: '/challenges', icon: 'award' },
+      { label: 'All Solutions', url: '/authority/solutions', icon: 'check-square' }
+    ]
+  };
+
+  // Determine active items list
+  const items = (typeof menuItems !== 'undefined' && Array.isArray(menuItems)) ? menuItems : (roleMenus[currentRole] || roleMenus.citizen);
+
+  const checkIsActive = (itemUrl) => {
+    if (itemUrl === '/citizen/dashboard') {
+      return currentPath === '/dashboard' || currentPath === '/citizen/dashboard';
+    }
+    if (itemUrl === '/problems') {
+      return currentPath === '/problems' || currentPath === '/citizen/problems' || currentPath.startsWith('/problems');
+    }
+    if (itemUrl === '/challenges') {
+      return currentPath === '/challenges' || currentPath.startsWith('/challenges');
+    }
+    if (itemUrl === '/citizen/my-problems') {
+      return currentPath === '/citizen/my-problems' || currentPath.startsWith('/citizen/my-problems');
+    }
+    if (itemUrl === '/citizen/report-problem') {
+      return currentPath === '/citizen/report-problem' || currentPath.startsWith('/citizen/report-problem');
+    }
+    return currentPath === itemUrl || (itemUrl !== '/' && currentPath.startsWith(itemUrl));
+  };
+%>
+
+<aside id="dashboardSidebar" class="sidebar" aria-label="Dashboard Sidebar">
+  <!-- Sidebar Header with Current Role -->
+  <div class="sidebar-header">
+    <span class="sidebar-role-tag"><%= currentRole.toUpperCase() %> PORTAL</span>
+  </div>
+
+  <!-- Sidebar Navigation Links -->
+  <ul class="sidebar-nav">
+    <li class="sidebar-section-title">Navigation</li>
+    <% items.forEach(function(item) { 
+       const isActive = checkIsActive(item.url);
+    %>
+      <li>
+        <a href="<%= item.url %>" class="sidebar-link <%= isActive ? 'active' : '' %>" <%= isActive ? 'aria-current="page"' : '' %>>
+          <!-- Icon Map -->
+          <% if (item.icon === 'grid') { %>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          <% } else if (item.icon === 'plus-circle') { %>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+          <% } else if (item.icon === 'users') { %>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          <% } else if (item.icon === 'file-text') { %>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          <% } else if (item.icon === 'compass' || item.icon === 'award') { %>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+            </svg>
+          <% } else if (item.icon === 'inbox') { %>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+            </svg>
+          <% } else if (item.icon === 'check-square') { %>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 11 12 14 22 4"></polyline>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+          <% } else if (item.icon === 'send') { %>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          <% } else { %>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+          <% } %>
+
+          <span><%= item.label %></span>
+
+          <% if (typeof item.badge !== 'undefined' && item.badge !== null) { %>
+            <span class="sidebar-badge"><%= item.badge %></span>
+          <% } %>
+        </a>
+      </li>
+    <% }); %>
+  </ul>
+
+  <!-- Sidebar Footer: Profile Info -->
+  <% if (typeof user !== 'undefined' && user) { %>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" aria-hidden="true">
+          <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+        </div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name"><%= user.name || 'Citizen' %></span>
+          <span class="sidebar-user-role"><%= (user.role || 'Citizen').charAt(0).toUpperCase() + (user.role || 'Citizen').slice(1) %></span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); margin-left: auto; flex-shrink: 0;" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+    </div>
+  <% } %>
+</aside>

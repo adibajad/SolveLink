@@ -1,0 +1,102 @@
+<%
+  // Extract and normalize challenge data whether passed directly or via a challenge object
+  const c = typeof challenge !== 'undefined' ? challenge : {};
+  const cardTitle = typeof title !== 'undefined' ? title : (c.title || 'Untitled Challenge');
+  const cardCategory = typeof category !== 'undefined' ? category : (c.category || 'Civic Infrastructure');
+  const cardLocation = typeof location !== 'undefined' ? location : (c.location || 'Local Area');
+  const cardDesc = typeof description !== 'undefined' ? description : (c.description || '');
+  // Category-based authentic local documentary images
+  let defaultImg = '/images/challenge-water.jpg';
+  const catLower = (cardCategory || '').toLowerCase();
+  if (catLower.includes('agri') || catLower.includes('energy') || catLower.includes('solar')) {
+    defaultImg = '/images/challenge-agriculture.jpg';
+  } else if (catLower.includes('edu') || catLower.includes('digital') || catLower.includes('school')) {
+    defaultImg = '/images/challenge-education.jpg';
+  } else if (catLower.includes('water') || catLower.includes('sanitation') || catLower.includes('pump')) {
+    defaultImg = '/images/challenge-water.jpg';
+  } else {
+    defaultImg = '/images/jharkhand-hero.jpg';
+  }
+
+  const cardImage = (typeof image !== 'undefined' && image) ? image : (c.image || c.images?.[0] || defaultImg);
+  const cardUrl = typeof url !== 'undefined' ? url : (c._id ? `/challenges/${c._id}` : '#');
+  const cardStatus = typeof status !== 'undefined' ? status : (c.status || 'PUBLISHED');
+  const cardInterested = typeof interestedCount !== 'undefined' ? interestedCount : (c.interestedCount || c.solutionsCount || 0);
+  const cardDeadline = typeof deadline !== 'undefined' ? deadline : (c.deadline ? new Date(c.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null);
+
+  const isFeatured = (typeof featured !== 'undefined' && featured) || c.featured;
+  const isCompact = (typeof compact !== 'undefined' && compact) || c.compact;
+
+  // Status Badge Class
+  let badgeClass = 'badge-neutral';
+  if (cardStatus === 'PUBLISHED') badgeClass = 'badge-success';
+  else if (cardStatus === 'IMPLEMENTATION' || cardStatus === 'SOLUTION_SELECTED') badgeClass = 'badge-primary';
+  else if (cardStatus === 'CLOSED' || cardStatus === 'COMPLETED') badgeClass = 'badge-neutral';
+  else if (cardStatus === 'DRAFT') badgeClass = 'badge-warning';
+%>
+
+<article class="challenge-card <%= isFeatured ? 'challenge-card--featured' : '' %> <%= isCompact ? 'challenge-card--compact' : '' %>">
+  <!-- Card Image Media (omitted in compact mode) -->
+  <% if (!isCompact) { %>
+    <div class="challenge-card-media">
+      <img src="<%= cardImage %>" alt="<%= cardTitle %>" class="challenge-card-img" loading="lazy" onerror="this.onerror=null; this.src='/images/jharkhand-hero.jpg';" />
+      <span class="badge <%= badgeClass %> challenge-card-badge">
+        <%= cardStatus.replace('_', ' ') %>
+      </span>
+    </div>
+  <% } %>
+
+  <!-- Card Body -->
+  <div class="challenge-card-body">
+    <!-- Meta: Category & Location -->
+    <div class="challenge-card-meta">
+      <span class="badge badge-primary" style="font-size: 0.6875rem;">
+        <%= cardCategory %>
+      </span>
+      <% if (cardLocation) { %>
+        <span class="challenge-card-meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <%= cardLocation %>
+        </span>
+      <% } %>
+    </div>
+
+    <!-- Title -->
+    <h3 class="challenge-card-title">
+      <a href="<%= cardUrl %>"><%= cardTitle %></a>
+    </h3>
+
+    <!-- Description -->
+    <% if (cardDesc) { %>
+      <p class="challenge-card-desc">
+        <%= cardDesc %>
+      </p>
+    <% } %>
+
+    <!-- Footer: Metrics & CTA -->
+    <div class="challenge-card-footer">
+      <div class="challenge-card-stat">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span><%= cardInterested %> Solutions / Teams</span>
+      </div>
+
+      <% if (cardDeadline) { %>
+        <div class="challenge-card-stat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>Due <%= cardDeadline %></span>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</article>

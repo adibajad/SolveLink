@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citizen Portal — SolveLink</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <%- include('../partials/navbar', { activePath: '/citizen/dashboard' }) %>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-layout">
+    
+    <!-- Dynamic Reusable Sidebar -->
+    <%- include('../partials/sidebar', { role: 'citizen', activePath: '/citizen/dashboard' }) %>
+
+    <!-- Main Dashboard Work Area -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Topbar -->
+        <div class="dashboard-topbar">
+          <div class="dashboard-title-group">
+            <h1 class="dashboard-welcome">Citizen Portal</h1>
+            <p class="dashboard-sub">Welcome back, <%= user ? user.name : 'Citizen' %>. Track your community issues and local innovation challenges.</p>
+          </div>
+          <div class="dashboard-actions">
+            <button id="dashboardSidebarToggle" class="btn btn-secondary btn-sm mobile-only" aria-label="Toggle Dashboard Menu">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+              <span>Menu</span>
+            </button>
+            <a href="/problems" class="btn btn-secondary btn-sm">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span>Community Problems</span>
+            </a>
+            <a href="/citizen/report-problem" class="btn btn-primary btn-md">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
+              <span>Report a Problem</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="dash-stats-grid">
+          <div class="dash-stat-card">
+            <div>
+              <div class="dash-stat-num"><%= stats.reportedCount %></div>
+              <div class="dash-stat-label">My Reported Problems</div>
+            </div>
+            <div class="dash-stat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <div class="dash-stat-card">
+            <div>
+              <div class="dash-stat-num"><%= stats.verifiedCount %></div>
+              <div class="dash-stat-label">Verified by Authorities</div>
+            </div>
+            <div class="dash-stat-icon" style="color: var(--color-success);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <div class="dash-stat-card">
+            <div>
+              <div class="dash-stat-num"><%= stats.supportedCount %></div>
+              <div class="dash-stat-label">Supported Issues</div>
+            </div>
+            <div class="dash-stat-icon" style="color: var(--color-warning);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+              </svg>
+            </div>
+          </div>
+
+          <div class="dash-stat-card">
+            <div>
+              <div class="dash-stat-num"><%= stats.challengesCount %></div>
+              <div class="dash-stat-label">Active Challenges</div>
+            </div>
+            <div class="dash-stat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="7"></circle>
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Two-Column Split (Problems & Supported Community Issues) -->
+        <div class="dash-grid-split">
+          
+          <!-- Column Left: My Recent Reported Problems -->
+          <div>
+            <div class="dash-section-header">
+              <h2 class="dash-section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                My Reported Problems
+              </h2>
+              <a href="/citizen/my-problems" class="btn btn-ghost btn-sm">View All &rarr;</a>
+            </div>
+
+            <% if (myProblems && myProblems.length > 0) { %>
+              <div class="dash-problem-list">
+                <% myProblems.slice(0, 5).forEach(function(prob) { 
+                  let badgeClass = 'badge-neutral';
+                  if (prob.status === 'VERIFIED') badgeClass = 'badge-success';
+                  else if (prob.status === 'CHALLENGE_CREATED') badgeClass = 'badge-primary';
+                  else if (prob.status === 'UNDER_VERIFICATION') badgeClass = 'badge-warning';
+                  else if (prob.status === 'REJECTED') badgeClass = 'badge-danger';
+                %>
+                  <a href="/problems/<%= prob._id %>" class="dash-problem-card">
+                    <div class="dash-problem-info">
+                      <span class="dash-problem-title"><%= prob.title %></span>
+                      <div class="dash-problem-meta">
+                        <span><%= prob.category %></span>
+                        <span>&bull;</span>
+                        <span><%= prob.location %></span>
+                        <span>&bull;</span>
+                        <span><%= prob.supporters ? prob.supporters.length : 1 %> Supporters</span>
+                      </div>
+                    </div>
+                    <div class="dash-problem-side">
+                      <span class="badge <%= badgeClass %>">
+                        <%= prob.status.replace('_', ' ') %>
+                      </span>
+                    </div>
+                  </a>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <div class="card card-body text-center" style="padding: var(--space-8);">
+                <p class="text-muted" style="margin-bottom: var(--space-4);">You have not reported any problems yet.</p>
+                <a href="/citizen/report-problem" class="btn btn-primary btn-sm">Report Your First Problem</a>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Column Right: Community Issues You Support -->
+          <div>
+            <div class="dash-section-header">
+              <h2 class="dash-section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                </svg>
+                Community Issues You Support
+              </h2>
+            </div>
+
+            <% if (supportedProblems && supportedProblems.length > 0) { %>
+              <div class="dash-problem-list">
+                <% supportedProblems.slice(0, 4).forEach(function(sp) { %>
+                  <a href="/problems/<%= sp._id %>" class="dash-problem-card">
+                    <div class="dash-problem-info">
+                      <span class="dash-problem-title"><%= sp.title %></span>
+                      <div class="dash-problem-meta">
+                        <span><%= sp.category %></span>
+                        <span>&bull;</span>
+                        <span><%= sp.location %></span>
+                      </div>
+                    </div>
+                    <span class="badge badge-neutral"><%= sp.status.replace('_', ' ') %></span>
+                  </a>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <div class="card card-body text-center" style="padding: var(--space-6);">
+                <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 0;">Explore public challenges and upvote community reports in your area.</p>
+              </div>
+            <% } %>
+          </div>
+
+        </div>
+
+        <!-- Recent Community Activity Feed Section -->
+        <section class="citizen-explore-section" style="margin-top: var(--space-6);" aria-labelledby="recentActivityTitle">
+          <div class="citizen-explore-header">
+            <div class="citizen-explore-header-left">
+              <h2 id="recentActivityTitle" class="citizen-explore-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Recent Community Activity
+              </h2>
+              <p class="citizen-explore-subtitle">
+                Latest updates on problem verification, citizen support milestones, and newly published challenges.
+              </p>
+            </div>
+          </div>
+
+          <% if (typeof recentActivities !== 'undefined' && recentActivities && recentActivities.length > 0) { %>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4);">
+              <% recentActivities.forEach(function(act) { %>
+                <a href="<%= act.url %>" style="background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; transition: transform var(--transition-fast), border-color var(--transition-fast);">
+                  <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); gap: var(--space-2);">
+                      <span class="badge <%= act.badgeClass %>" style="font-size: 0.625rem;"><%= act.type.toUpperCase() %></span>
+                      <span style="font-size: 0.6875rem; color: var(--color-text-muted);"><%= act.time ? new Date(act.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recent' %></span>
+                    </div>
+                    <strong style="font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text); display: block; line-height: 1.35; margin-bottom: var(--space-1);">
+                      <%= act.title %>
+                    </strong>
+                    <p style="font-size: 0.6875rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 0;">
+                      <%= act.detail %>
+                    </p>
+                  </div>
+                  <div style="padding-top: var(--space-2); margin-top: var(--space-2); border-top: 1px solid var(--color-surface-soft); font-size: 0.6875rem; color: var(--color-primary); font-weight: var(--font-weight-semibold);">
+                    View Details &rarr;
+                  </div>
+                </a>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <div class="card card-body text-center" style="padding: var(--space-6);">
+              <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 0;">
+                No recent activity to show yet. Explore community problems and challenges to see updates.
+              </p>
+            </div>
+          <% } %>
+        </section>
+
+        <!-- Community Problems in Your Area Section -->
+        <% if (typeof nearbyProblems !== 'undefined' && nearbyProblems && nearbyProblems.length > 0) { %>
+          <section class="citizen-explore-section" style="margin-top: var(--space-6);" aria-labelledby="nearbyProblemsTitle">
+            <div class="citizen-explore-header">
+              <div class="citizen-explore-header-left">
+                <h2 id="nearbyProblemsTitle" class="citizen-explore-title">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  Community Problems Near You
+                </h2>
+                <p class="citizen-explore-subtitle">
+                  Review and upvote civic issues reported by fellow citizens across your region.
+                </p>
+              </div>
+              <a href="/problems" class="btn btn-ghost btn-sm" style="font-weight: var(--font-weight-semibold); color: var(--color-primary);">
+                Explore All Problems &rarr;
+              </a>
+            </div>
+
+            <div class="citizen-challenges-grid">
+              <% nearbyProblems.forEach(function(np) { 
+                const nSupporters = np.supporters ? np.supporters.length : 1;
+              %>
+                <article class="citizen-challenge-card" style="padding: var(--space-4);">
+                  <div class="citizen-challenge-badge-row">
+                    <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= np.category %></span>
+                    <span class="badge badge-neutral" style="font-size: 0.6875rem;"><%= np.status.replace('_', ' ') %></span>
+                  </div>
+
+                  <h3 class="citizen-challenge-title">
+                    <a href="/problems/<%= np._id %>" style="color: inherit; text-decoration: none;">
+                      <%= np.title %>
+                    </a>
+                  </h3>
+
+                  <p class="citizen-challenge-desc">
+                    <%= np.description %>
+                  </p>
+
+                  <div class="citizen-challenge-meta-list">
+                    <div class="citizen-challenge-meta-item">
+                      <svg class="citizen-challenge-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                      <span><%= np.location %></span>
+                    </div>
+                    <div class="citizen-challenge-meta-item">
+                      <span aria-hidden="true">👍</span>
+                      <span style="font-weight: var(--font-weight-semibold);"><%= nSupporters %> <%= nSupporters === 1 ? 'supporter' : 'supporters' %></span>
+                    </div>
+                  </div>
+
+                  <div class="citizen-challenge-footer">
+                    <a href="/problems/<%= np._id %>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                      <span>View Problem</span>
+                      <span class="citizen-challenge-arrow" aria-hidden="true">&rarr;</span>
+                    </a>
+                  </div>
+                </article>
+              <% }); %>
+            </div>
+          </section>
+        <% } %>
+
+        <!-- Dedicated Compact "Explore Challenges" Section (Responsive 3-Column Grid) -->
+        <section class="citizen-explore-section" aria-labelledby="exploreChallengesTitle">
+          <div class="citizen-explore-header">
+            <div class="citizen-explore-header-left">
+              <h2 id="exploreChallengesTitle" class="citizen-explore-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="7"></circle>
+                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                </svg>
+                Explore Challenges
+              </h2>
+              <p class="citizen-explore-subtitle">
+                Find verified civic challenges where students, universities and industry partners can contribute solutions.
+              </p>
+            </div>
+            <a href="/challenges" class="btn btn-ghost btn-sm" style="font-weight: var(--font-weight-semibold); color: var(--color-primary);">
+              View All Challenges &rarr;
+            </a>
+          </div>
+
+          <% if (activeChallenges && activeChallenges.length > 0) { %>
+            <div class="citizen-challenges-grid">
+              <% activeChallenges.forEach(function(c) { 
+                let thumbImg = c.image || (c.images && c.images.length > 0 ? c.images[0] : null) || (c.sourceProblem && c.sourceProblem.images && c.sourceProblem.images.length > 0 ? c.sourceProblem.images[0] : null);
+                if (!thumbImg) {
+                  const cat = (c.category || '').toLowerCase();
+                  if (cat.includes('water') || cat.includes('sanitation') || cat.includes('pump') || cat.includes('drainage')) {
+                    thumbImg = '/images/challenge-water.jpg';
+                  } else if (cat.includes('agri') || cat.includes('energy') || cat.includes('solar') || cat.includes('forest')) {
+                    thumbImg = '/images/challenge-agriculture.jpg';
+                  } else if (cat.includes('edu') || cat.includes('digital') || cat.includes('school')) {
+                    thumbImg = '/images/challenge-education.jpg';
+                  } else {
+                    thumbImg = '/images/jharkhand-hero.jpg';
+                  }
+                }
+
+                let daysLeftText = 'Active Challenge';
+                if (c.deadline) {
+                  const diffTime = new Date(c.deadline) - new Date();
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  if (diffDays > 0) {
+                    daysLeftText = `${diffDays} ${diffDays === 1 ? 'day' : 'days'} left`;
+                  } else if (diffDays === 0) {
+                    daysLeftText = 'Ends today';
+                  } else {
+                    daysLeftText = 'Evaluation phase';
+                  }
+                }
+
+                const teamsCount = c.participatingTeams ? c.participatingTeams.length : 0;
+                const interestedText = teamsCount > 0 
+                  ? `${teamsCount} ${teamsCount === 1 ? 'team' : 'teams'} interested`
+                  : 'Open for proposals';
+              %>
+                <article class="citizen-challenge-card">
+                  <div class="citizen-challenge-thumb-container">
+                    <img 
+                      src="<%= thumbImg %>" 
+                      alt="<%= c.title %>" 
+                      class="citizen-challenge-thumb" 
+                      loading="lazy" 
+                      onerror="this.onerror=null; this.src='/images/jharkhand-hero.jpg';"
+                    />
+                  </div>
+
+                  <div class="citizen-challenge-body">
+                    <div class="citizen-challenge-badge-row">
+                      <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= c.category %></span>
+                      <span class="badge badge-success" style="font-size: 0.6875rem;">Verified</span>
+                    </div>
+
+                    <h3 class="citizen-challenge-title">
+                      <a href="/challenges/<%= c._id %>" style="color: inherit; text-decoration: none;">
+                        <%= c.title %>
+                      </a>
+                    </h3>
+
+                    <p class="citizen-challenge-desc">
+                      <%= c.description %>
+                    </p>
+
+                    <div class="citizen-challenge-meta-list">
+                      <div class="citizen-challenge-meta-item">
+                        <svg class="citizen-challenge-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                          <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span><%= c.location || (c.sourceProblem ? c.sourceProblem.location : 'Jharkhand Region') %></span>
+                      </div>
+
+                      <div class="citizen-challenge-meta-item">
+                        <svg class="citizen-challenge-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="9" cy="7" r="4"></circle>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span><%= interestedText %></span>
+                      </div>
+
+                      <div class="citizen-challenge-meta-item">
+                        <svg class="citizen-challenge-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span><%= daysLeftText %></span>
+                      </div>
+                    </div>
+
+                    <div class="citizen-challenge-footer">
+                      <a href="/challenges/<%= c._id %>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                        <span>View Challenge</span>
+                        <span class="citizen-challenge-arrow" aria-hidden="true">&rarr;</span>
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <div class="card card-body text-center" style="padding: var(--space-8);">
+              <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: var(--space-3);">
+                No active challenges are currently published. Check back soon or explore all civic problem statements.
+              </p>
+              <a href="/challenges" class="btn btn-outline btn-sm">Explore Challenges Archive &rarr;</a>
+            </div>
+          <% } %>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

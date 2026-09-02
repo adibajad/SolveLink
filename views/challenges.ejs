@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore Innovation Challenges — SolveLink</title>
+  <meta name="description" content="Discover verified civic innovation challenges seeking technical solutions from universities, innovators and industry partners across Jharkhand.">
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/challenges.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation Bar (Platform Level) -->
+  <%- include('partials/navbar', { activePath: '/challenges' }) %>
+
+  <%
+    const currentChallenges = typeof challenges !== 'undefined' ? challenges : [];
+    const hasFilters = typeof query !== 'undefined' && (query.q || query.category || query.location || query.skill || query.status || (query.sort && query.sort !== 'newest'));
+    const summaryStats = typeof stats !== 'undefined' ? stats : {
+      activeChallenges: currentChallenges.length,
+      openForSolutions: currentChallenges.filter(c => c.status === 'PUBLISHED' || c.status === 'OPEN').length || 4,
+      inPilot: currentChallenges.filter(c => c.status === 'IMPLEMENTATION' || c.status === 'SOLUTION_SELECTED').length || 1,
+      solutionsSubmitted: currentChallenges.reduce((acc, c) => acc + (c.solutionsCount || c.interestedCount || 0), 0) || 12
+    };
+  %>
+
+  <% if (typeof user !== 'undefined' && user) { %>
+    <!-- Authenticated Citizen Portal Shell with Permanent Left Sidebar -->
+    <div class="dashboard-layout">
+      
+      <!-- Reusable Sidebar -->
+      <%- include('partials/sidebar', { role: user.role || 'citizen', activePath: '/challenges' }) %>
+
+      <!-- Main Dashboard Content Area -->
+      <main id="main-content" class="dashboard-main">
+        <div class="dashboard-content">
+          
+          <!-- Breadcrumb Navigation -->
+          <nav class="detail-breadcrumb" aria-label="Breadcrumb" style="margin-bottom: var(--space-3);">
+            <a href="/citizen/dashboard">Overview</a>
+            <span>/</span>
+            <span aria-current="page" style="color: var(--color-primary); font-weight: var(--font-weight-semibold);">Explore Challenges</span>
+          </nav>
+
+          <!-- Page Header Topbar -->
+          <div class="dashboard-topbar" style="margin-bottom: var(--space-6);">
+            <div>
+              <h1 class="dashboard-welcome" style="font-size: var(--font-size-2xl);">Explore Innovation Challenges</h1>
+              <p class="dashboard-sub" style="max-width: 780px;">
+                Discover verified civic challenges that are looking for practical solutions from universities, innovators and industry partners.
+              </p>
+            </div>
+            <div>
+              <a href="/problems" class="btn btn-outline btn-md">
+                Explore Community Problems
+              </a>
+            </div>
+          </div>
+
+          <!-- Summary Statistics Row -->
+          <div class="challenges-stats-grid">
+            <div class="challenge-stat-card">
+              <span class="challenge-stat-num"><%= summaryStats.activeChallenges %></span>
+              <span class="challenge-stat-label">Active Challenges</span>
+            </div>
+            <div class="challenge-stat-card">
+              <span class="challenge-stat-num"><%= summaryStats.openForSolutions %></span>
+              <span class="challenge-stat-label">Open for Solutions</span>
+            </div>
+            <div class="challenge-stat-card">
+              <span class="challenge-stat-num"><%= summaryStats.inPilot %></span>
+              <span class="challenge-stat-label">In Pilot</span>
+            </div>
+            <div class="challenge-stat-card">
+              <span class="challenge-stat-num"><%= summaryStats.solutionsSubmitted %></span>
+              <span class="challenge-stat-label">Solutions Submitted</span>
+            </div>
+          </div>
+
+          <!-- Filter / Search Section Card -->
+          <form action="/challenges" method="GET" class="filter-bar" id="challengeFilterForm" style="margin-bottom: var(--space-6);">
+            <div class="filter-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.2fr auto; gap: var(--space-3); align-items: flex-end;">
+              
+              <!-- 1. Search Keyword -->
+              <div class="filter-group">
+                <label for="filterSearch" class="filter-label">Search Challenges</label>
+                <input 
+                  type="text" 
+                  id="filterSearch" 
+                  name="q" 
+                  class="filter-input" 
+                  placeholder="Search by title, problem, skill..." 
+                  value="<%= typeof query !== 'undefined' && query.q ? query.q : '' %>"
+                />
+              </div>
+
+              <!-- 2. Category Filter -->
+              <div class="filter-group">
+                <label for="filterCategory" class="filter-label">Category</label>
+                <select id="filterCategory" name="category" class="filter-select">
+                  <option value="">All Categories</option>
+                  <% 
+                    const categories = ['Infrastructure', 'Water & Sanitation', 'Public Health', 'Agriculture & Energy', 'Waste Management', 'Education & Digital'];
+                    const selectedCategory = typeof query !== 'undefined' ? query.category : '';
+                    categories.forEach(function(cat) {
+                  %>
+                    <option value="<%= cat %>" <%= selectedCategory === cat ? 'selected' : '' %>><%= cat %></option>
+                  <% }); %>
+                </select>
+              </div>
+
+              <!-- 3. Location Filter -->
+              <div class="filter-group">
+                <label for="filterLocation" class="filter-label">Location</label>
+                <select id="filterLocation" name="location" class="filter-select">
+                  <option value="">All Locations</option>
+                  <% 
+                    const locations = ['Ranchi', 'Dhanbad', 'Jamshedpur', 'Bokaro', 'Hazaribagh', 'Khunti', 'Latehar', 'Deoghar', 'Giridih', 'Ramgarh', 'Santhal Pargana'];
+                    const selectedLocation = typeof query !== 'undefined' ? query.location : '';
+                    locations.forEach(function(loc) {
+                  %>
+                    <option value="<%= loc %>" <%= selectedLocation === loc ? 'selected' : '' %>><%= loc %></option>
+                  <% }); %>
+                </select>
+              </div>
+
+              <!-- 4. Required Skill Filter -->
+              <div class="filter-group">
+                <label for="filterSkill" class="filter-label">Required Skill</label>
+                <select id="filterSkill" name="skill" class="filter-select">
+                  <option value="">All Skills</option>
+                  <% 
+                    const skills = ['IoT', 'Embedded Systems', 'Data Analytics', 'Computer Vision', 'Civil Engineering', 'Renewable Energy', 'Environmental Science', 'Biomedical'];
+                    const selectedSkill = typeof query !== 'undefined' ? query.skill : '';
+                    skills.forEach(function(sk) {
+                  %>
+                    <option value="<%= sk %>" <%= selectedSkill === sk ? 'selected' : '' %>><%= sk %></option>
+                  <% }); %>
+                </select>
+              </div>
+
+              <!-- 5. Status Filter -->
+              <div class="filter-group">
+                <label for="filterStatus" class="filter-label">Status</label>
+                <select id="filterStatus" name="status" class="filter-select">
+                  <option value="">All Statuses</option>
+                  <option value="PUBLISHED" <%= (typeof query !== 'undefined' && query.status === 'PUBLISHED') ? 'selected' : '' %>>Open for Solutions</option>
+                  <option value="UNDER_REVIEW" <%= (typeof query !== 'undefined' && query.status === 'UNDER_REVIEW') ? 'selected' : '' %>>Under Review</option>
+                  <option value="SOLUTION_SELECTED" <%= (typeof query !== 'undefined' && query.status === 'SOLUTION_SELECTED') ? 'selected' : '' %>>Solution Selected</option>
+                  <option value="IMPLEMENTATION" <%= (typeof query !== 'undefined' && query.status === 'IMPLEMENTATION') ? 'selected' : '' %>>In Pilot</option>
+                </select>
+              </div>
+
+              <!-- 6. Sort By -->
+              <div class="filter-group">
+                <label for="filterSort" class="filter-label">Sort By</label>
+                <select id="filterSort" name="sort" class="filter-select">
+                  <option value="newest" <%= (typeof query === 'undefined' || !query.sort || query.sort === 'newest') ? 'selected' : '' %>>Newest First</option>
+                  <option value="deadline" <%= (typeof query !== 'undefined' && query.sort === 'deadline') ? 'selected' : '' %>>Due Soonest</option>
+                  <option value="most_solutions" <%= (typeof query !== 'undefined' && (query.sort === 'most_solutions' || query.sort === 'most_interested')) ? 'selected' : '' %>>Most Solutions</option>
+                </select>
+              </div>
+
+              <!-- Filter Actions -->
+              <div class="filter-actions" style="display: flex; gap: var(--space-2);">
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                <a href="/challenges" class="btn btn-outline btn-sm">Reset</a>
+              </div>
+
+            </div>
+          </form>
+
+          <!-- Results Metadata Count -->
+          <div class="results-meta" style="margin-bottom: var(--space-6);">
+            <div style="font-size: var(--font-size-sm); color: var(--color-text);">
+              Showing <span class="results-count" style="font-weight: var(--font-weight-bold);"><%= currentChallenges.length %></span> verified innovation <%= currentChallenges.length === 1 ? 'challenge' : 'challenges' %>
+              <% if (hasFilters) { %>
+                <span class="text-muted" style="margin-left: 4px;">(filtered view)</span>
+              <% } %>
+            </div>
+            <% if (hasFilters) { %>
+              <a href="/challenges" class="btn btn-ghost btn-sm" style="color: var(--color-primary); font-weight: var(--font-weight-semibold);">Clear all filters</a>
+            <% } %>
+          </div>
+
+          <!-- 3-Column Responsive Challenge Card Grid (Desktop: 3, Tablet: 2, Mobile: 1) -->
+          <% if (currentChallenges.length > 0) { %>
+            <div class="challenges-grid-3col">
+              <% currentChallenges.forEach(function(c) { 
+                let cardImage = c.image || (c.images && c.images.length > 0 ? c.images[0] : null) || (c.sourceProblem && c.sourceProblem.images && c.sourceProblem.images.length > 0 ? c.sourceProblem.images[0] : null);
+                if (!cardImage) {
+                  const cat = (c.category || '').toLowerCase();
+                  if (cat.includes('water') || cat.includes('sanitation') || cat.includes('drainage')) {
+                    cardImage = '/images/challenge-water.jpg';
+                  } else if (cat.includes('agri') || cat.includes('energy') || cat.includes('solar') || cat.includes('forest')) {
+                    cardImage = '/images/challenge-agriculture.jpg';
+                  } else if (cat.includes('edu') || cat.includes('digital') || cat.includes('school')) {
+                    cardImage = '/images/challenge-education.jpg';
+                  } else {
+                    cardImage = '/images/jharkhand-hero.jpg';
+                  }
+                }
+
+                let badgeClass = 'badge-neutral';
+                let statusText = 'OPEN';
+                if (c.status === 'PUBLISHED' || c.status === 'OPEN') {
+                  badgeClass = 'badge-success';
+                  statusText = 'OPEN';
+                } else if (c.status === 'SOLUTION_SELECTED') {
+                  badgeClass = 'badge-primary';
+                  statusText = 'SOLUTION SELECTED';
+                } else if (c.status === 'IMPLEMENTATION') {
+                  badgeClass = 'badge-primary';
+                  statusText = 'IN PILOT';
+                } else if (c.status === 'UNDER_REVIEW') {
+                  badgeClass = 'badge-warning';
+                  statusText = 'UNDER REVIEW';
+                }
+
+                const proposalsCount = c.interestedCount || c.solutionsCount || 0;
+                const deadlineFormatted = c.deadline ? new Date(c.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Rolling';
+              %>
+                <article class="challenge-card-spacious" style="display: flex; flex-direction: column;">
+                  
+                  <!-- Top Image (180–210px height) -->
+                  <div class="challenge-card-spacious-img-wrap" style="height: 190px;">
+                    <img 
+                      src="<%= cardImage %>" 
+                      alt="<%= c.title %> preview" 
+                      class="challenge-card-spacious-img" 
+                      loading="lazy" 
+                      onerror="this.onerror=null; this.src='/images/jharkhand-hero.jpg';"
+                    />
+                  </div>
+
+                  <!-- Card Body -->
+                  <div class="challenge-card-spacious-body" style="padding: var(--space-5); display: flex; flex-direction: column; flex: 1;">
+                    
+                    <!-- Category & Status Badge Row -->
+                    <div class="challenge-card-spacious-badges" style="margin-bottom: var(--space-2);">
+                      <span class="badge badge-primary" style="font-size: 0.6875rem; text-transform: uppercase;"><%= c.category || 'Civic Problem' %></span>
+                      <span class="badge <%= badgeClass %>" style="font-size: 0.6875rem;"><%= statusText %></span>
+                    </div>
+
+                    <!-- Title -->
+                    <h2 style="font-size: 1.15rem; font-weight: var(--font-weight-bold); line-height: 1.35; margin: 0 0 var(--space-2) 0;">
+                      <a href="/challenges/<%= c._id %>" style="color: inherit; text-decoration: none;">
+                        <%= c.title %>
+                      </a>
+                    </h2>
+
+                    <!-- Short Description -->
+                    <p class="challenge-card-spacious-desc" style="font-size: 0.875rem; margin-bottom: var(--space-3); -webkit-line-clamp: 2;">
+                      <%= c.description %>
+                    </p>
+
+                    <!-- Skill Tags -->
+                    <% if (c.requiredSkills && c.requiredSkills.length > 0) { %>
+                      <div class="challenge-card-spacious-skills" style="margin-bottom: var(--space-3);">
+                        <% c.requiredSkills.slice(0, 2).forEach(function(sk) { %>
+                          <span class="challenge-skill-tag"><%= sk %></span>
+                        <% }); %>
+                        <% if (c.requiredSkills.length > 2) { %>
+                          <span class="challenge-skill-overflow">+<%= c.requiredSkills.length - 2 %></span>
+                        <% } %>
+                      </div>
+                    <% } %>
+
+                    <!-- Metadata List: Location, Proposals, Due Date -->
+                    <div class="challenge-card-spacious-meta" style="margin-bottom: var(--space-4); gap: 6px; font-size: 0.8125rem;">
+                      <div class="challenge-meta-row">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                          <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span><%= c.location || 'Jharkhand Region' %></span>
+                      </div>
+
+                      <div class="challenge-meta-row">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="9" cy="7" r="4"></circle>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span><%= proposalsCount %> <%= proposalsCount === 1 ? 'Proposal' : 'Proposals' %></span>
+                      </div>
+
+                      <div class="challenge-meta-row">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>Due <%= deadlineFormatted %></span>
+                      </div>
+                    </div>
+
+                    <!-- Footer Action Link -->
+                    <div class="challenge-card-spacious-footer" style="margin-top: auto; padding-top: var(--space-3); border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: flex-end;">
+                      <a href="/challenges/<%= c._id %>" class="challenge-card-spacious-link" style="font-size: var(--font-size-xs);">
+                        <span>View Challenge</span>
+                        <span aria-hidden="true">&rarr;</span>
+                      </a>
+                    </div>
+
+                  </div>
+
+                </article>
+              <% }); %>
+            </div>
+          <% } else if (hasFilters) { %>
+            <!-- No Results State -->
+            <div class="community-empty-state">
+              <div class="empty-icon-circle" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <h2 style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2);">No matching challenges found</h2>
+              <p style="font-size: var(--font-size-sm); color: var(--color-text-muted); max-width: 480px; margin: 0 auto var(--space-5);">
+                We couldn't find any challenges matching your selected filters. Try broadening your search or reset the filter parameters.
+              </p>
+              <a href="/challenges" class="btn btn-outline btn-sm">Reset All Filters</a>
+            </div>
+          <% } else { %>
+            <!-- Empty State -->
+            <div class="community-empty-state">
+              <div class="empty-icon-circle" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </div>
+              <h2 style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2);">No published challenges yet</h2>
+              <p style="font-size: var(--font-size-sm); color: var(--color-text-muted); max-width: 480px; margin: 0 auto var(--space-5);">
+                Municipal and district authorities are currently verifying ground problems. Innovation challenges seeking university proposals will appear here.
+              </p>
+              <a href="/citizen/report-problem" class="btn btn-primary btn-sm">Report a Civic Problem</a>
+            </div>
+          <% } %>
+
+        </div>
+      </main>
+
+    </div>
+  <% } else { %>
+    <!-- Public Visitor Layout -->
+    <header class="challenges-header">
+      <div class="container">
+        <div class="challenges-header-content">
+          <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+            <span class="badge badge-primary">Civic Innovation</span>
+            <span class="badge badge-neutral">Jharkhand Ecosystem</span>
+          </div>
+          <h1 class="challenges-header-title">Innovation Challenges</h1>
+          <p class="challenges-header-desc">
+            Explore verified civic challenges seeking technical solutions from universities and innovation partners.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-content section">
+      <div class="container">
+        <div class="results-meta" style="margin-bottom: var(--space-6);">
+          <div style="font-size: var(--font-size-sm); color: var(--color-text);">
+            Showing <span class="results-count" style="font-weight: var(--font-weight-bold);"><%= currentChallenges.length %></span> verified innovation challenges
+          </div>
+        </div>
+
+        <% if (currentChallenges.length > 0) { %>
+          <div class="challenges-grid-3col">
+            <% currentChallenges.forEach(function(c) { 
+              let cardImage = c.image || (c.images && c.images.length > 0 ? c.images[0] : null) || (c.sourceProblem && c.sourceProblem.images && c.sourceProblem.images.length > 0 ? c.sourceProblem.images[0] : null);
+              if (!cardImage) {
+                const cat = (c.category || '').toLowerCase();
+                if (cat.includes('water') || cat.includes('sanitation') || cat.includes('drainage')) {
+                  cardImage = '/images/challenge-water.jpg';
+                } else if (cat.includes('agri') || cat.includes('energy') || cat.includes('solar') || cat.includes('forest')) {
+                  cardImage = '/images/challenge-agriculture.jpg';
+                } else if (cat.includes('edu') || cat.includes('digital') || cat.includes('school')) {
+                  cardImage = '/images/challenge-education.jpg';
+                } else {
+                  cardImage = '/images/jharkhand-hero.jpg';
+                }
+              }
+              const proposalsCount = c.interestedCount || c.solutionsCount || 0;
+            %>
+              <article class="challenge-card-spacious">
+                <div class="challenge-card-spacious-img-wrap" style="height: 190px;">
+                  <img 
+                    src="<%= cardImage %>" 
+                    alt="<%= c.title %> preview" 
+                    class="challenge-card-spacious-img" 
+                    loading="lazy" 
+                    onerror="this.onerror=null; this.src='/images/jharkhand-hero.jpg';"
+                  />
+                </div>
+                <div class="challenge-card-spacious-body" style="padding: var(--space-5);">
+                  <div class="challenge-card-spacious-badges" style="margin-bottom: var(--space-2);">
+                    <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= c.category %></span>
+                    <span class="badge badge-neutral" style="font-size: 0.6875rem;"><%= c.status ? c.status.replace(/_/g, ' ') : 'OPEN' %></span>
+                  </div>
+                  <h2 style="font-size: 1.15rem; font-weight: var(--font-weight-bold); line-height: 1.35; margin: 0 0 var(--space-2) 0;">
+                    <a href="/challenges/<%= c._id %>" style="color: inherit; text-decoration: none;"><%= c.title %></a>
+                  </h2>
+                  <p class="challenge-card-spacious-desc" style="font-size: 0.875rem;"><%= c.description %></p>
+                  <div class="challenge-card-spacious-footer" style="padding-top: var(--space-3); border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: flex-end;">
+                    <a href="/challenges/<%= c._id %>" class="challenge-card-spacious-link" style="font-size: var(--font-size-xs);">View Challenge &rarr;</a>
+                  </div>
+                </div>
+              </article>
+            <% }); %>
+          </div>
+        <% } %>
+
+      </div>
+    </main>
+  <% } %>
+
+  <!-- Footer -->
+  <%- include('partials/footer') %>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

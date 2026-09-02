@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — SolveLink</title>
+  <meta name="description" content="Sign in to your SolveLink account to report problems, create challenges, or submit university innovation solutions.">
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/forms.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Reusable Navigation Bar -->
+  <%- include('../partials/navbar', { activePath: '/auth/login' }) %>
+
+  <!-- Main Login Container -->
+  <main id="main-content" class="main-content auth-section">
+    <div class="container">
+      <div class="auth-card">
+        
+        <!-- Auth Header -->
+        <div class="auth-header">
+          <div class="auth-header-brand">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="5" cy="6" r="3" fill="#7B2340" />
+              <circle cx="19" cy="6" r="3" fill="#C28B38" />
+              <circle cx="12" cy="18" r="3.5" fill="#7B2340" />
+              <line x1="7.5" y1="6" x2="16.5" y2="6" stroke="#7B2340" stroke-width="1.8" stroke-linecap="round" />
+              <line x1="6.8" y1="8.5" x2="10.5" y2="15.5" stroke="#7B2340" stroke-width="1.8" stroke-linecap="round" />
+              <line x1="17.2" y1="8.5" x2="13.5" y2="15.5" stroke="#C28B38" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </div>
+          <h1 class="auth-title">Welcome to SolveLink</h1>
+          <p class="auth-subtitle">Sign in to your civic or innovation account</p>
+        </div>
+
+        <!-- Auth Body -->
+        <div class="auth-body">
+          
+          <!-- Error / Success Banners -->
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="form-alert form-alert-error" role="alert">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span><%= error %></span>
+            </div>
+          <% } %>
+
+          <% if (typeof success !== 'undefined' && success) { %>
+            <div class="form-alert form-alert-success" role="status">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span><%= success %></span>
+            </div>
+          <% } %>
+
+          <!-- Login Form -->
+          <form action="/auth/login" method="POST" novalidate>
+            <input type="hidden" name="redirect" value="<%= typeof redirect !== 'undefined' ? redirect : '' %>">
+
+            <!-- Email Field -->
+            <div class="form-group">
+              <label for="email" class="form-label">Email Address</label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                class="form-input" 
+                placeholder="name@organization.gov.in / name@uni.edu" 
+                value="<%= typeof email !== 'undefined' ? email : '' %>" 
+                required 
+                autocomplete="email"
+                autofocus
+              />
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+              <div class="form-label">
+                <label for="password" style="margin-bottom: 0;">Password</label>
+                <a href="/auth/forgot-password" class="form-label-optional" style="color: var(--color-primary); text-decoration: none; font-size: var(--font-size-xs); font-weight: var(--font-weight-medium);">
+                  Forgot password?
+                </a>
+              </div>
+              <div class="password-input-wrapper">
+                <input 
+                  type="password" 
+                  id="password" 
+                  name="password" 
+                  class="form-input" 
+                  placeholder="••••••••" 
+                  required 
+                  autocomplete="current-password"
+                />
+                <button 
+                  type="button" 
+                  class="password-toggle-btn" 
+                  aria-label="Show password" 
+                  aria-controls="password" 
+                  title="Show password"
+                >
+                  <svg class="eye-icon eye-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg class="eye-icon eye-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: var(--space-2);">
+              Sign In
+            </button>
+          </form>
+
+        </div>
+
+        <!-- Auth Footer -->
+        <div class="auth-footer">
+          <span>Don't have an account? <a href="/auth/register">Create an account</a></span>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Reusable Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

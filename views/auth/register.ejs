@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — SolveLink</title>
+  <meta name="description" content="Register your SolveLink account as a citizen, government authority, university researcher, or industry innovator.">
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/forms.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <%- include('../partials/navbar', { activePath: '/auth/register' }) %>
+
+  <!-- Main Registration Container -->
+  <main id="main-content" class="main-content auth-section">
+    <div class="container">
+      <div class="auth-card auth-card-wide">
+        
+        <!-- Auth Header -->
+        <div class="auth-header">
+          <div class="auth-header-brand">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="5" cy="6" r="3" fill="#7B2340" />
+              <circle cx="19" cy="6" r="3" fill="#C28B38" />
+              <circle cx="12" cy="18" r="3.5" fill="#7B2340" />
+              <line x1="7.5" y1="6" x2="16.5" y2="6" stroke="#7B2340" stroke-width="1.8" stroke-linecap="round" />
+              <line x1="6.8" y1="8.5" x2="10.5" y2="15.5" stroke="#7B2340" stroke-width="1.8" stroke-linecap="round" />
+              <line x1="17.2" y1="8.5" x2="13.5" y2="15.5" stroke="#C28B38" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </div>
+          <h1 class="auth-title">Join SolveLink</h1>
+          <p class="auth-subtitle">Select your role to participate in the civic innovation ecosystem</p>
+        </div>
+
+        <!-- Auth Body -->
+        <div class="auth-body">
+          
+          <!-- Error Alert -->
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="form-alert form-alert-error" role="alert">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span><%= error %></span>
+            </div>
+          <% } %>
+
+          <%
+            const currentData = typeof formData !== 'undefined' ? formData : {};
+            const currentRole = currentData.role || 'citizen';
+          %>
+
+          <!-- Registration Form -->
+          <form action="/auth/register" method="POST" id="registerForm" novalidate>
+            
+            <!-- 1. Stakeholder Role Selection -->
+            <div class="form-group">
+              <label class="form-label">I am joining as a:</label>
+              
+              <div class="role-selector-grid">
+                
+                <!-- Citizen -->
+                <label class="role-option">
+                  <input type="radio" name="role" value="citizen" <%= currentRole === 'citizen' ? 'checked' : '' %>>
+                  <div class="role-option-box">
+                    <svg class="role-option-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span class="role-option-title">Citizen</span>
+                  </div>
+                </label>
+
+                <!-- University / Researcher -->
+                <label class="role-option">
+                  <input type="radio" name="role" value="university" <%= currentRole === 'university' ? 'checked' : '' %>>
+                  <div class="role-option-box">
+                    <svg class="role-option-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                      <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                    </svg>
+                    <span class="role-option-title">University / Lab</span>
+                  </div>
+                </label>
+
+                <!-- Authority -->
+                <label class="role-option">
+                  <input type="radio" name="role" value="authority" <%= currentRole === 'authority' ? 'checked' : '' %>>
+                  <div class="role-option-box">
+                    <svg class="role-option-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span class="role-option-title">Authority</span>
+                  </div>
+                </label>
+
+                <!-- Industry -->
+                <label class="role-option">
+                  <input type="radio" name="role" value="industry" <%= currentRole === 'industry' ? 'checked' : '' %>>
+                  <div class="role-option-box">
+                    <svg class="role-option-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+                    </svg>
+                    <span class="role-option-title">Industry Partner</span>
+                  </div>
+                </label>
+
+                <!-- Admin -->
+                <label class="role-option">
+                  <input type="radio" name="role" value="admin" <%= currentRole === 'admin' ? 'checked' : '' %>>
+                  <div class="role-option-box">
+                    <svg class="role-option-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span class="role-option-title">Admin</span>
+                  </div>
+                </label>
+
+              </div>
+            </div>
+
+            <!-- 2. Core User Fields -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="regName" class="form-label">Full Name / Official Name</label>
+                <input 
+                  type="text" 
+                  id="regName" 
+                  name="name" 
+                  class="form-input" 
+                  placeholder="e.g. Dr. Rajesh Kumar / Ananya Roy" 
+                  value="<%= currentData.name || '' %>" 
+                  required 
+                  autocomplete="name"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="regEmail" class="form-label">Email Address</label>
+                <input 
+                  type="email" 
+                  id="regEmail" 
+                  name="email" 
+                  class="form-input" 
+                  placeholder="name@domain.edu / name@gov.in" 
+                  value="<%= currentData.email || '' %>" 
+                  required 
+                  autocomplete="email"
+                />
+              </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+              <label for="regPassword" class="form-label">Password</label>
+              <div class="password-input-wrapper">
+                <input 
+                  type="password" 
+                  id="regPassword" 
+                  name="password" 
+                  class="form-input" 
+                  placeholder="Minimum 6 characters" 
+                  minlength="6" 
+                  required 
+                  autocomplete="new-password"
+                />
+                <button 
+                  type="button" 
+                  class="password-toggle-btn" 
+                  aria-label="Show password" 
+                  aria-controls="regPassword" 
+                  title="Show password"
+                >
+                  <svg class="eye-icon eye-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg class="eye-icon eye-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+              <span class="form-hint">Use at least 6 characters with a combination of letters and numbers.</span>
+            </div>
+
+            <!-- 3. Conditional / Contextual Fields -->
+            <div id="orgFieldContainer" class="form-group" style="<%= currentRole === 'citizen' ? 'display: none;' : '' %>">
+              <label for="regOrg" class="form-label" id="orgLabel">
+                Organization / Institution
+              </label>
+              <input 
+                type="text" 
+                id="regOrg" 
+                name="organization" 
+                class="form-input" 
+                placeholder="e.g. BIT Mesra / Ranchi Municipal Corp / Tech Startup" 
+                value="<%= currentData.organization || '' %>"
+              />
+            </div>
+
+            <div id="skillsFieldContainer" class="form-group" style="<%= (currentRole === 'university' || currentRole === 'industry') ? '' : 'display: none;' %>">
+              <label for="regSkills" class="form-label">
+                <span>Technical Skills / Disciplines</span>
+                <span class="form-label-optional">Comma-separated</span>
+              </label>
+              <input 
+                type="text" 
+                id="regSkills" 
+                name="skills" 
+                class="form-input" 
+                placeholder="e.g. IoT, Computer Vision, Civil Engineering, Renewable Energy" 
+                value="<%= currentData.skills || '' %>"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="regLocation" class="form-label">
+                <span>Location / District</span>
+                <span class="form-label-optional">Optional</span>
+              </label>
+              <input 
+                type="text" 
+                id="regLocation" 
+                name="location" 
+                class="form-input" 
+                placeholder="e.g. Ranchi, Jharkhand" 
+                value="<%= currentData.location || '' %>"
+              />
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: var(--space-4);">
+              Create Account
+            </button>
+          </form>
+
+        </div>
+
+        <!-- Auth Footer -->
+        <div class="auth-footer">
+          <span>Already have an account? <a href="/auth/login">Sign in</a></span>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Reusable Footer -->
+  <%- include('../partials/footer') %>
+
+  <!-- Dynamic Role Field Switching Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const roleInputs = document.querySelectorAll('input[name="role"]');
+      const orgContainer = document.getElementById('orgFieldContainer');
+      const orgLabel = document.getElementById('orgLabel');
+      const skillsContainer = document.getElementById('skillsFieldContainer');
+
+      function updateFields(role) {
+        if (role === 'citizen') {
+          orgContainer.style.display = 'none';
+          skillsContainer.style.display = 'none';
+        } else if (role === 'authority') {
+          orgContainer.style.display = 'flex';
+          orgLabel.textContent = 'Government Department / Municipal Agency';
+          skillsContainer.style.display = 'none';
+        } else if (role === 'university') {
+          orgContainer.style.display = 'flex';
+          orgLabel.textContent = 'University / Research Institute / Lab';
+          skillsContainer.style.display = 'flex';
+        } else if (role === 'industry') {
+          orgContainer.style.display = 'flex';
+          orgLabel.textContent = 'Company / Industry Partner';
+          skillsContainer.style.display = 'flex';
+        } else if (role === 'admin') {
+          orgContainer.style.display = 'flex';
+          orgLabel.textContent = 'Administrative Department';
+          skillsContainer.style.display = 'none';
+        }
+      }
+
+      roleInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+          updateFields(e.target.value);
+        });
+      });
+    });
+  </script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

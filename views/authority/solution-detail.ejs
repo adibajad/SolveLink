@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluate Proposal: <%= solution.title %> — SolveLink</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/authority/solutions' }) %>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'authority', activePath: '/authority/solutions' }) %>
+
+    <!-- Main Content -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Breadcrumb -->
+        <div style="margin-bottom: var(--space-4);">
+          <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+            <a href="/authority/dashboard">Authority Console</a>
+            <span>&bull;</span>
+            <a href="/authority/solutions">Solution Queue</a>
+            <span>&bull;</span>
+            <span aria-current="page"><%= solution._id %></span>
+          </nav>
+        </div>
+
+        <% if (typeof successMsg !== 'undefined' && successMsg) { %>
+          <div class="alert alert-success" style="margin-bottom: var(--space-4);">
+            <span><%= successMsg %></span>
+          </div>
+        <% } %>
+
+        <div class="problem-detail-grid">
+          
+          <!-- Left: Submitter Information & Solution Proposal -->
+          <div class="problem-main-content">
+            
+            <!-- Header Section -->
+            <div class="problem-section">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2);">
+                <span class="badge badge-primary">Technical Proposal</span>
+
+                <% 
+                  let badgeClass = 'badge-neutral';
+                  if (solution.status === 'SELECTED') badgeClass = 'badge-success';
+                  else if (solution.status === 'SHORTLISTED') badgeClass = 'badge-primary';
+                  else if (solution.status === 'SUBMITTED' || solution.status === 'UNDER_REVIEW') badgeClass = 'badge-warning';
+                  else if (solution.status === 'REJECTED') badgeClass = 'badge-danger';
+                %>
+                <span class="badge <%= badgeClass %>">Status: <%= solution.status.replace('_', ' ') %></span>
+              </div>
+
+              <h1 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); line-height: 1.2; margin-bottom: var(--space-3);">
+                <%= solution.title %>
+              </h1>
+
+              <div style="display: flex; align-items: center; gap: var(--space-4); font-size: var(--font-size-xs); color: var(--color-text-muted); flex-wrap: wrap;">
+                <span>Addressing: <strong><a href="/challenges/<%= solution.challenge?._id %>"><%= solution.challenge?.title %></a></strong></span>
+                <span>&bull;</span>
+                <span>Team: <strong><%= solution.team?.name || solution.submittedBy?.name %></strong></span>
+                <span>&bull;</span>
+                <span>Submitted: <%= new Date(solution.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+              </div>
+            </div>
+
+            <!-- Technical Summary & Approach -->
+            <div class="problem-section">
+              <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3);">
+                Technical Description & Methodology
+              </h2>
+              <div class="detail-text">
+                <p style="white-space: pre-line;"><%= solution.description %></p>
+              </div>
+
+              <!-- Technology Stack -->
+              <% if (solution.technology && solution.technology.length > 0) { %>
+                <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-top: var(--space-6); margin-bottom: var(--space-2);">
+                  Technologies & Engineering Tools
+                </h3>
+                <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+                  <% solution.technology.forEach(function(tech) { %>
+                    <span class="badge badge-neutral"><%= tech %></span>
+                  <% }); %>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Cost Economics & Community Impact -->
+            <div class="grid grid-cols-2 gap-6">
+              <div class="problem-section">
+                <h2 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-2);">
+                  Estimated Deployment Cost
+                </h2>
+                <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-primary); margin-bottom: var(--space-2);">
+                  &#8377;<%= Number(solution.estimatedCost || 0).toLocaleString('en-IN') %>
+                </div>
+                <p class="text-muted" style="font-size: var(--font-size-xs); margin-bottom: 0;">
+                  Pilot budget requested for hardware, field testing, and installation.
+                </p>
+              </div>
+
+              <div class="problem-section">
+                <h2 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-2);">
+                  Projected Community Impact
+                </h2>
+                <p style="font-size: var(--font-size-sm); line-height: var(--line-height-base); margin-bottom: 0; color: var(--color-text);">
+                  <%= solution.impact || 'Reduces downtime and deployment costs while directly benefiting local residents.' %>
+                </p>
+              </div>
+            </div>
+
+            <!-- Team Composition -->
+            <% if (solution.team && solution.team.members && solution.team.members.length > 0) { %>
+              <div class="problem-section">
+                <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3);">
+                  Project Team Members (<%= solution.team.name %>)
+                </h2>
+                <div class="dash-problem-list">
+                  <% solution.team.members.forEach(function(m) { %>
+                    <div class="dash-problem-card" style="padding: var(--space-3) var(--space-4);">
+                      <div>
+                        <strong><%= m.name %></strong> &mdash; <span class="text-muted" style="font-size: var(--font-size-xs);"><%= m.role || 'Contributor' %></span>
+                      </div>
+                      <span class="text-muted" style="font-size: var(--font-size-xs);"><%= m.email %> &bull; <%= m.organization %></span>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+            <% } %>
+
+          </div>
+
+          <!-- Right: Official Evaluation Rubric & Decision Panel -->
+          <aside style="display: flex; flex-direction: column; gap: var(--space-6);">
+            
+            <div class="card card-body" style="border-top: 3px solid var(--color-primary);">
+              <span class="badge badge-primary" style="margin-bottom: var(--space-2);">Standardized Scoring</span>
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: var(--space-1);">
+                Authority Evaluation Rubric
+              </h2>
+              <p class="text-muted" style="font-size: var(--font-size-xs); margin-bottom: var(--space-4);">
+                Score each dimension against government benchmarks (Total: 100).
+              </p>
+
+              <!-- Evaluation Rubric Form -->
+              <form action="/authority/solutions/<%= solution._id %>/evaluate" method="POST" id="evalForm">
+                
+                <!-- 1. Feasibility (0-20) -->
+                <div class="form-group" style="margin-bottom: var(--space-3);">
+                  <label for="scoreFeas" class="form-label">
+                    <span>1. Technical Feasibility</span>
+                    <span id="valFeas">15/20</span>
+                  </label>
+                  <input type="range" id="scoreFeas" name="scoreFeasibility" min="0" max="20" value="15" class="filter-input" oninput="calcTotalScore()" />
+                </div>
+
+                <!-- 2. Cost / Economics (0-20) -->
+                <div class="form-group" style="margin-bottom: var(--space-3);">
+                  <label for="scoreCost" class="form-label">
+                    <span>2. Cost Efficiency</span>
+                    <span id="valCost">16/20</span>
+                  </label>
+                  <input type="range" id="scoreCost" name="scoreCost" min="0" max="20" value="16" class="filter-input" oninput="calcTotalScore()" />
+                </div>
+
+                <!-- 3. Innovation (0-20) -->
+                <div class="form-group" style="margin-bottom: var(--space-3);">
+                  <label for="scoreInnov" class="form-label">
+                    <span>3. Innovation & Novelty</span>
+                    <span id="valInnov">17/20</span>
+                  </label>
+                  <input type="range" id="scoreInnov" name="scoreInnovation" min="0" max="20" value="17" class="filter-input" oninput="calcTotalScore()" />
+                </div>
+
+                <!-- 4. Impact (0-20) -->
+                <div class="form-group" style="margin-bottom: var(--space-3);">
+                  <label for="scoreImp" class="form-label">
+                    <span>4. Civic & Ground Impact</span>
+                    <span id="valImp">18/20</span>
+                  </label>
+                  <input type="range" id="scoreImp" name="scoreImpact" min="0" max="20" value="18" class="filter-input" oninput="calcTotalScore()" />
+                </div>
+
+                <!-- 5. Scalability (0-10) -->
+                <div class="form-group" style="margin-bottom: var(--space-3);">
+                  <label for="scoreScale" class="form-label">
+                    <span>5. Scalability</span>
+                    <span id="valScale">8/10</span>
+                  </label>
+                  <input type="range" id="scoreScale" name="scoreScalability" min="0" max="10" value="8" class="filter-input" oninput="calcTotalScore()" />
+                </div>
+
+                <!-- 6. Sustainability (0-10) -->
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                  <label for="scoreSust" class="form-label">
+                    <span>6. Maintenance & Sustainability</span>
+                    <span id="valSust">8/10</span>
+                  </label>
+                  <input type="range" id="scoreSust" name="scoreSustainability" min="0" max="10" value="8" class="filter-input" oninput="calcTotalScore()" />
+                </div>
+
+                <!-- Total Score Display -->
+                <div style="background-color: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-3); text-align: center; margin-bottom: var(--space-4);">
+                  <span style="font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; color: var(--color-text-muted);">
+                    Composite Evaluation Score
+                  </span>
+                  <div id="totalScoreDisplay" style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-primary);">
+                    <%= solution.evaluation?.score || 82 %> / 100
+                  </div>
+                </div>
+
+                <!-- Written Feedback -->
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                  <label for="evalFeedback" class="form-label">Authority Reviewer Notes</label>
+                  <textarea id="evalFeedback" name="feedback" class="form-textarea" rows="3" placeholder="Provide actionable feedback or conditions for pilot onboarding..."><%= solution.evaluation?.feedback || '' %></textarea>
+                </div>
+
+                <!-- Decision Actions -->
+                <label class="form-label">Select Evaluation Decision</label>
+                <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                  <button type="submit" name="decision" value="SHORTLIST" class="btn btn-secondary btn-sm btn-block">
+                    ★ Shortlist Proposal
+                  </button>
+                  <button type="submit" name="decision" value="SELECT" class="btn btn-primary btn-sm btn-block">
+                    ✔ Select Solution for Challenge
+                  </button>
+                  <button type="submit" name="decision" value="IMPLEMENT" class="btn btn-primary btn-sm btn-block" style="background-color: var(--color-success); border-color: var(--color-success);">
+                    🚀 Approve for Pilot Implementation
+                  </button>
+                  <button type="submit" name="decision" value="REJECT" class="btn btn-danger btn-sm btn-block" onclick="return confirm('Are you sure you want to reject this solution proposal?');">
+                    ✕ Reject Proposal
+                  </button>
+                </div>
+
+              </form>
+            </div>
+
+          </aside>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script>
+    function calcTotalScore() {
+      const feas = Number(document.getElementById('scoreFeas').value);
+      const cost = Number(document.getElementById('scoreCost').value);
+      const innov = Number(document.getElementById('scoreInnov').value);
+      const imp = Number(document.getElementById('scoreImp').value);
+      const scale = Number(document.getElementById('scoreScale').value);
+      const sust = Number(document.getElementById('scoreSust').value);
+
+      document.getElementById('valFeas').textContent = feas + '/20';
+      document.getElementById('valCost').textContent = cost + '/20';
+      document.getElementById('valInnov').textContent = innov + '/20';
+      document.getElementById('valImp').textContent = imp + '/20';
+      document.getElementById('valScale').textContent = scale + '/10';
+      document.getElementById('valSust').textContent = sust + '/10';
+
+      const total = feas + cost + innov + imp + scale + sust;
+      document.getElementById('totalScoreDisplay').textContent = total + ' / 100';
+    }
+  </script>
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>
