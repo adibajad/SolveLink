@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platform Administrator Console — SolveLink</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+
+  <style>
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+    .admin-stat-card {
+      background: var(--color-surface, #ffffff);
+      border: 1px solid var(--color-border, #E2E8F0);
+      border-radius: var(--radius-md, 8px);
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+    .admin-stat-val {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-text, #1E293B);
+      line-height: 1.2;
+    }
+    .admin-stat-label {
+      font-size: var(--font-size-xs, 0.75rem);
+      font-weight: 600;
+      color: var(--color-text-muted, #64748B);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .admin-tabs-nav {
+      display: flex;
+      gap: var(--space-2);
+      border-bottom: 2px solid var(--color-border, #E2E8F0);
+      margin-bottom: var(--space-6);
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .admin-tab-btn {
+      background: none;
+      border: none;
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--font-size-sm, 0.875rem);
+      font-weight: 600;
+      color: var(--color-text-muted, #64748B);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .admin-tab-btn:hover {
+      color: var(--color-primary, #7B2340);
+    }
+    .admin-tab-btn.active {
+      color: var(--color-primary, #7B2340);
+      border-bottom-color: var(--color-primary, #7B2340);
+    }
+    .admin-tab-pane {
+      display: none;
+    }
+    .admin-tab-pane.active {
+      display: block;
+    }
+    .admin-table-container {
+      background: var(--color-surface, #ffffff);
+      border: 1px solid var(--color-border, #E2E8F0);
+      border-radius: var(--radius-md, 8px);
+      overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--space-6);
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--font-size-sm, 0.875rem);
+      text-align: left;
+    }
+    .admin-table th {
+      background: #F8FAFC;
+      padding: var(--space-3) var(--space-4);
+      font-weight: 600;
+      color: var(--color-text-muted, #64748B);
+      border-bottom: 1px solid var(--color-border, #E2E8F0);
+      white-space: nowrap;
+    }
+    .admin-table td {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--color-border, #E2E8F0);
+      color: var(--color-text, #1E293B);
+      vertical-align: middle;
+    }
+    .admin-table tr:hover td {
+      background: #F8FAFC;
+    }
+    .chips-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+    }
+    .chip {
+      padding: 4px 10px;
+      background: var(--color-surface, #fff);
+      border: 1px solid var(--color-border, #E2E8F0);
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <%- include('../partials/navbar', { activePath: '/admin/dashboard' }) %>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'admin', activePath: '/admin/dashboard' }) %>
+
+    <!-- Main Dashboard Work Area -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Topbar -->
+        <div class="dashboard-topbar" style="margin-bottom: var(--space-6);">
+          <div class="dashboard-title-group">
+            <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 4px;">
+              <span class="badge badge-primary" style="font-size: 0.7rem; letter-spacing: 0.05em;">SUPERADMIN</span>
+              <span class="text-muted" style="font-size: var(--font-size-xs);">&bull; Real-time Platform Operations</span>
+            </div>
+            <h1 class="dashboard-welcome">SolveLink Platform Control Center</h1>
+            <p class="dashboard-sub">Platform-level monitoring across Citizens, Authorities, Universities, and Industry partners.</p>
+          </div>
+          <div class="dashboard-actions">
+            <span class="badge badge-success" style="padding: 6px 12px; font-size: 0.75rem;">
+              ● System Operational
+            </span>
+          </div>
+        </div>
+
+        <!-- 1. ECOSYSTEM OVERVIEW CARDS -->
+        <h2 style="font-size: var(--font-size-base); font-weight: 600; margin-bottom: var(--space-3); color: var(--color-text);">1. Platform Ecosystem Overview</h2>
+        <div class="admin-stats-grid">
+          <div class="admin-stat-card">
+            <span class="admin-stat-val"><%= overview.totalUsers %></span>
+            <span class="admin-stat-label">Total Accounts</span>
+          </div>
+          <div class="admin-stat-card" style="border-left: 3px solid #0284C7;">
+            <span class="admin-stat-val"><%= overview.totalCitizens %></span>
+            <span class="admin-stat-label">Citizens</span>
+          </div>
+          <div class="admin-stat-card" style="border-left: 3px solid var(--color-primary, #7B2340);">
+            <span class="admin-stat-val"><%= overview.totalAuthorities %></span>
+            <span class="admin-stat-label">Authorities</span>
+          </div>
+          <div class="admin-stat-card" style="border-left: 3px solid var(--color-secondary, #C28B38);">
+            <span class="admin-stat-val"><%= overview.totalUniversities %></span>
+            <span class="admin-stat-label">Universities / Labs</span>
+          </div>
+          <div class="admin-stat-card" style="border-left: 3px solid #10B981;">
+            <span class="admin-stat-val"><%= overview.totalIndustries %></span>
+            <span class="admin-stat-label">Industry Partners</span>
+          </div>
+          <div class="admin-stat-card" style="border-left: 3px solid #F59E0B;">
+            <span class="admin-stat-val"><%= overview.totalProblems %></span>
+            <span class="admin-stat-label">Civic Problems</span>
+          </div>
+          <div class="admin-stat-card" style="border-left: 3px solid #6366F1;">
+            <span class="admin-stat-val"><%= overview.totalChallenges %></span>
+            <span class="admin-stat-label">Active Challenges</span>
+          </div>
+          <div class="admin-stat-card" style="border-left: 3px solid #8B5CF6;">
+            <span class="admin-stat-val"><%= overview.totalSolutions %></span>
+            <span class="admin-stat-label">Proposals / Solutions</span>
+          </div>
+          <div class="admin-stat-card" style="border-left: 3px solid #059669;">
+            <span class="admin-stat-val"><%= overview.activeCollaborations %></span>
+            <span class="admin-stat-label">Industry Collaborations</span>
+          </div>
+        </div>
+
+        <!-- TAB NAVIGATION -->
+        <div class="admin-tabs-nav" role="tablist">
+          <button class="admin-tab-btn active" onclick="switchAdminTab('accounts', this)" role="tab">
+            👥 Stakeholder Accounts (<%= accounts.length %>)
+          </button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('problems', this)" role="tab">
+            🚨 Civic Problems (<%= problems.length %>)
+          </button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('challenges', this)" role="tab">
+            🏆 Challenges (<%= challenges.length %>)
+          </button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('solutions', this)" role="tab">
+            💡 Proposals & Solutions (<%= solutions.length %>)
+          </button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('collaborations', this)" role="tab">
+            🤝 Industry Collaborations (<%= collaborations.length %>)
+          </button>
+        </div>
+
+        <!-- 2. STAKEHOLDER ACCOUNTS TAB -->
+        <div id="tab-accounts" class="admin-tab-pane active" role="tabpanel">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+            <h3 style="font-size: var(--font-size-base); font-weight: 600; margin-bottom: 0;">Registered Stakeholder Accounts</h3>
+            <span class="text-muted" style="font-size: var(--font-size-xs);">Showing latest <%= accounts.length %> users across MongoDB</span>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>User / Official Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Sector / Organization</th>
+                  <th>Jurisdiction / Location</th>
+                  <th>Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (accounts && accounts.length > 0) { %>
+                  <% accounts.forEach(function(acc) { %>
+                    <tr>
+                      <td>
+                        <strong><%= acc.name %></strong>
+                      </td>
+                      <td><%= acc.email %></td>
+                      <td>
+                        <% if (acc.role === 'admin') { %>
+                          <span class="badge badge-primary">Admin</span>
+                        <% } else if (acc.role === 'authority') { %>
+                          <span class="badge badge-danger">Authority</span>
+                        <% } else if (acc.role === 'university') { %>
+                          <span class="badge badge-warning">University</span>
+                        <% } else if (acc.role === 'industry') { %>
+                          <span class="badge badge-success">Industry</span>
+                        <% } else { %>
+                          <span class="badge badge-neutral">Citizen</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <%= acc.authoritySector ? acc.authoritySector.replace(/_/g, ' ') : (acc.organization || '—') %>
+                      </td>
+                      <td><%= acc.jurisdiction || acc.location || '—' %></td>
+                      <td style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                        <%= new Date(acc.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: var(--color-text-muted); padding: var(--space-6);">No accounts found.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. PROBLEMS TAB -->
+        <div id="tab-problems" class="admin-tab-pane" role="tabpanel">
+          <div class="chips-group">
+            <span class="chip"><strong>Pending Assignment:</strong> <%= problemsMetrics.pending %></span>
+            <span class="chip"><strong>Assigned to Authority:</strong> <%= problemsMetrics.assigned %></span>
+            <span class="chip"><strong>Under Review:</strong> <%= problemsMetrics.underReview %></span>
+            <span class="chip"><strong>Officially Verified:</strong> <%= problemsMetrics.verified %></span>
+            <span class="chip"><strong>Resolved:</strong> <%= problemsMetrics.resolved %></span>
+            <span class="chip" style="background: #FEF3C7; border-color: #FCD34D;"><strong>Needs Review:</strong> <%= problemsMetrics.needsReview %></span>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Problem Title</th>
+                  <th>AI Domain & Category</th>
+                  <th>Location</th>
+                  <th>Urgency</th>
+                  <th>Assigned Authority</th>
+                  <th>Routing Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (problems && problems.length > 0) { %>
+                  <% problems.forEach(function(prob) { %>
+                    <tr>
+                      <td>
+                        <strong><%= prob.title %></strong>
+                      </td>
+                      <td>
+                        <span class="badge badge-neutral" style="font-size: 0.7rem;">
+                          <%= (prob.aiClassification && prob.aiClassification.domain) ? prob.aiClassification.domain.replace(/_/g, ' ') : prob.category %>
+                        </span>
+                        <% if (prob.aiClassification && prob.aiClassification.category) { %>
+                          <span class="text-muted" style="font-size: 0.7rem; display: block;">
+                            Sub: <%= prob.aiClassification.category.replace(/_/g, ' ') %>
+                          </span>
+                        <% } %>
+                      </td>
+                      <td><%= prob.location %></td>
+                      <td>
+                        <span class="badge <%= (prob.priority === 'CRITICAL' || prob.priority === 'HIGH') ? 'badge-danger' : 'badge-neutral' %>">
+                          <%= prob.priority %>
+                        </span>
+                      </td>
+                      <td>
+                        <% if (prob.assignedAuthority) { %>
+                          <strong><%= prob.assignedAuthority.name %></strong>
+                          <span class="text-muted" style="font-size: 0.7rem; display: block;"><%= prob.assignedAuthority.authoritySector ? prob.assignedAuthority.authoritySector.replace(/_/g, ' ') : '' %></span>
+                        <% } else { %>
+                          <span class="text-muted">Unassigned</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <span class="badge <%= prob.assignmentStatus === 'assigned' ? 'badge-success' : (prob.assignmentStatus === 'needs_review' ? 'badge-warning' : 'badge-neutral') %>">
+                          <%= (prob.assignmentStatus || 'pending').toUpperCase() %>
+                        </span>
+                      </td>
+                      <td style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                        <%= new Date(prob.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="7" style="text-align: center; color: var(--color-text-muted); padding: var(--space-6);">No civic problems recorded.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4. CHALLENGES TAB -->
+        <div id="tab-challenges" class="admin-tab-pane" role="tabpanel">
+          <div class="chips-group">
+            <span class="chip"><strong>Draft:</strong> <%= challengesMetrics.draft %></span>
+            <span class="chip"><strong>Published & Open:</strong> <%= challengesMetrics.published %></span>
+            <span class="chip"><strong>Solution Selected:</strong> <%= challengesMetrics.selected %></span>
+            <span class="chip"><strong>Closed:</strong> <%= challengesMetrics.closed %></span>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Challenge Title</th>
+                  <th>Sector & Domain</th>
+                  <th>Created By Authority</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Deadline</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (challenges && challenges.length > 0) { %>
+                  <% challenges.forEach(function(ch) { %>
+                    <tr>
+                      <td>
+                        <strong><%= ch.title %></strong>
+                      </td>
+                      <td>
+                        <span class="badge badge-neutral" style="font-size: 0.7rem;">
+                          <%= ch.authoritySector ? ch.authoritySector.replace(/_/g, ' ') : ch.category %>
+                        </span>
+                      </td>
+                      <td>
+                        <%= ch.createdBy ? ch.createdBy.name : (ch.department || 'Authority') %>
+                      </td>
+                      <td><%= ch.location %></td>
+                      <td>
+                        <span class="badge <%= ch.status === 'PUBLISHED' ? 'badge-success' : 'badge-neutral' %>">
+                          <%= ch.status %>
+                        </span>
+                      </td>
+                      <td style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                        <%= ch.deadline ? new Date(ch.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Open' %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: var(--color-text-muted); padding: var(--space-6);">No innovation challenges published.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5. PROPOSALS / SOLUTIONS TAB -->
+        <div id="tab-solutions" class="admin-tab-pane" role="tabpanel">
+          <div class="chips-group">
+            <span class="chip"><strong>Submitted:</strong> <%= solutionsMetrics.submitted %></span>
+            <span class="chip"><strong>Under Review:</strong> <%= solutionsMetrics.underReview %></span>
+            <span class="chip"><strong>Shortlisted:</strong> <%= solutionsMetrics.shortlisted %></span>
+            <span class="chip"><strong>Accepted / Selected:</strong> <%= solutionsMetrics.accepted %></span>
+            <span class="chip"><strong>Implementation:</strong> <%= solutionsMetrics.implementation %></span>
+            <span class="chip"><strong>Rejected:</strong> <%= solutionsMetrics.rejected %></span>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Proposal Title</th>
+                  <th>University / Research Team</th>
+                  <th>Target Challenge</th>
+                  <th>Estimated Cost</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (solutions && solutions.length > 0) { %>
+                  <% solutions.forEach(function(sol) { %>
+                    <tr>
+                      <td>
+                        <strong><%= sol.title %></strong>
+                      </td>
+                      <td>
+                        <%= sol.submittedBy ? sol.submittedBy.name : (sol.team || 'University Lab') %>
+                      </td>
+                      <td>
+                        <%= sol.challenge ? sol.challenge.title : '—' %>
+                      </td>
+                      <td>₹<%= sol.estimatedCost ? sol.estimatedCost.toLocaleString() : '—' %></td>
+                      <td>
+                        <span class="badge <%= (sol.status === 'SELECTED' || sol.status === 'ACCEPTED') ? 'badge-success' : (sol.status === 'SHORTLISTED' ? 'badge-primary' : 'badge-neutral') %>">
+                          <%= sol.status %>
+                        </span>
+                      </td>
+                      <td style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                        <%= new Date(sol.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: var(--color-text-muted); padding: var(--space-6);">No proposals submitted.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 6. INDUSTRY COLLABORATION TAB -->
+        <div id="tab-collaborations" class="admin-tab-pane" role="tabpanel">
+          <div class="chips-group">
+            <span class="chip"><strong>Pending Expressions:</strong> <%= collaborationsMetrics.pending %></span>
+            <span class="chip"><strong>Accepted / Partnered:</strong> <%= collaborationsMetrics.accepted %></span>
+            <span class="chip"><strong>Rejected:</strong> <%= collaborationsMetrics.rejected %></span>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Industry Partner</th>
+                  <th>Target Proposal / Solution</th>
+                  <th>Challenge</th>
+                  <th>Support Type</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (collaborations && collaborations.length > 0) { %>
+                  <% collaborations.forEach(function(collab) { %>
+                    <tr>
+                      <td>
+                        <strong><%= collab.industry ? collab.industry.name : 'Industry Partner' %></strong>
+                        <span class="text-muted" style="font-size: 0.7rem; display: block;"><%= collab.industry ? collab.industry.organization : '' %></span>
+                      </td>
+                      <td>
+                        <%= collab.proposal ? collab.proposal.title : '—' %>
+                      </td>
+                      <td>
+                        <%= collab.challenge ? collab.challenge.title : '—' %>
+                      </td>
+                      <td>
+                        <span class="badge badge-neutral" style="font-size: 0.7rem;">
+                          <%= (collab.supportType || 'PARTNERSHIP').replace(/_/g, ' ') %>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge <%= collab.status === 'ACCEPTED' ? 'badge-success' : (collab.status === 'PENDING' ? 'badge-warning' : 'badge-neutral') %>">
+                          <%= collab.status %>
+                        </span>
+                      </td>
+                      <td style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                        <%= new Date(collab.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: var(--color-text-muted); padding: var(--space-6);">No industry collaboration requests recorded.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Site Footer -->
+  <%- include('../partials/footer') %>
+
+  <script>
+    function switchAdminTab(tabKey, clickedBtn) {
+      document.querySelectorAll('.admin-tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('active'));
+
+      const targetPane = document.getElementById('tab-' + tabKey);
+      if (targetPane) targetPane.classList.add('active');
+      if (clickedBtn) clickedBtn.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>

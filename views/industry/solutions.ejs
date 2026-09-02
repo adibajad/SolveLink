@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>University Solutions Pipeline — SolveLink Industry</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/challenges.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/industry/solutions' }) %>
+
+  <!-- Dashboard Layout -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'industry', activePath: '/industry/solutions' }) %>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Header -->
+        <div class="dashboard-topbar">
+          <div>
+            <h1 class="dashboard-welcome">University Solutions & Pilot Opportunities</h1>
+            <p class="dashboard-sub">Discover technical prototypes from university research labs ready for industrial scaling, field manufacturing, and municipal deployment.</p>
+          </div>
+          <div>
+            <a href="/industry/challenges" class="btn btn-secondary btn-md">
+              Browse Civic Challenges
+            </a>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <form action="/industry/solutions" method="GET" class="filter-bar" style="margin-bottom: var(--space-6);">
+          <div class="filter-grid filter-grid-discovery">
+            
+            <div class="filter-group">
+              <label for="filterSearch" class="filter-label">Keyword Search</label>
+              <input 
+                type="text" 
+                id="filterSearch" 
+                name="q" 
+                class="filter-input" 
+                placeholder="IoT, Sensor, Pump, Solar..." 
+                value="<%= typeof query !== 'undefined' && query.q ? query.q : '' %>"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="filterDomain" class="filter-label">Domain</label>
+              <select id="filterDomain" name="domain" class="filter-select">
+                <option value="">All Domains</option>
+                <option value="Agriculture & Energy" <%= (typeof query !== 'undefined' && query.domain === 'Agriculture & Energy') ? 'selected' : '' %>>Agriculture & Energy</option>
+                <option value="Infrastructure" <%= (typeof query !== 'undefined' && query.domain === 'Infrastructure') ? 'selected' : '' %>>Infrastructure</option>
+                <option value="Public Health" <%= (typeof query !== 'undefined' && query.domain === 'Public Health') ? 'selected' : '' %>>Public Health</option>
+                <option value="Water & Sanitation" <%= (typeof query !== 'undefined' && query.domain === 'Water & Sanitation') ? 'selected' : '' %>>Water & Sanitation</option>
+                <option value="Waste Management" <%= (typeof query !== 'undefined' && query.domain === 'Waste Management') ? 'selected' : '' %>>Waste Management</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filterSkill" class="filter-label">Technology / Skill</label>
+              <select id="filterSkill" name="skill" class="filter-select">
+                <option value="">All Capabilities</option>
+                <option value="IoT" <%= (typeof query !== 'undefined' && query.skill === 'IoT') ? 'selected' : '' %>>IoT</option>
+                <option value="Embedded Systems" <%= (typeof query !== 'undefined' && query.skill === 'Embedded Systems') ? 'selected' : '' %>>Embedded Systems</option>
+                <option value="Computer Vision" <%= (typeof query !== 'undefined' && query.skill === 'Computer Vision') ? 'selected' : '' %>>Computer Vision</option>
+                <option value="Civil Engineering" <%= (typeof query !== 'undefined' && query.skill === 'Civil Engineering') ? 'selected' : '' %>>Civil Engineering</option>
+                <option value="Biomedical" <%= (typeof query !== 'undefined' && query.skill === 'Biomedical') ? 'selected' : '' %>>Biomedical</option>
+                <option value="Renewable Energy" <%= (typeof query !== 'undefined' && query.skill === 'Renewable Energy') ? 'selected' : '' %>>Renewable Energy</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filterStatus" class="filter-label">Status</label>
+              <select id="filterStatus" name="status" class="filter-select">
+                <option value="">All Stages</option>
+                <option value="SUBMITTED" <%= (typeof query !== 'undefined' && query.status === 'SUBMITTED') ? 'selected' : '' %>>Submitted</option>
+                <option value="UNDER_REVIEW" <%= (typeof query !== 'undefined' && query.status === 'UNDER_REVIEW') ? 'selected' : '' %>>Under Review</option>
+                <option value="SHORTLISTED" <%= (typeof query !== 'undefined' && query.status === 'SHORTLISTED') ? 'selected' : '' %>>Shortlisted</option>
+                <option value="SELECTED" <%= (typeof query !== 'undefined' && query.status === 'SELECTED') ? 'selected' : '' %>>Selected for Pilot</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: flex-end; gap: var(--space-2);">
+              <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+              <% if (typeof query !== 'undefined' && (query.q || query.domain || query.skill || query.status)) { %>
+                <a href="/industry/solutions" class="btn btn-ghost btn-sm">Clear</a>
+              <% } %>
+            </div>
+
+          </div>
+        </form>
+
+        <!-- Solutions List Ranked by Industry Synergy -->
+        <% if (solutions && solutions.length > 0) { %>
+          
+          <div class="dash-problem-list">
+            <% solutions.forEach(function(sol) { 
+              let badgeClass = 'badge-neutral';
+              if (sol.status === 'SELECTED') badgeClass = 'badge-success';
+              else if (sol.status === 'SHORTLISTED') badgeClass = 'badge-primary';
+              else if (sol.status === 'SUBMITTED' || sol.status === 'UNDER_REVIEW') badgeClass = 'badge-warning';
+
+              let matchBadge = 'badge-neutral';
+              if ((sol.synergyScore || 0) >= 75) matchBadge = 'badge-success';
+              else if ((sol.synergyScore || 0) >= 50) matchBadge = 'badge-warning';
+            %>
+              <div class="dash-problem-card" style="padding: var(--space-5);">
+                <div class="dash-problem-info">
+                  <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 3px;">
+                    <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= sol.challenge?.category || 'Civic Tech' %></span>
+                    <span class="badge <%= matchBadge %>" style="font-size: 0.6875rem;">
+                      ★ <%= sol.synergyScore || 50 %>% Industry Synergy
+                    </span>
+                    <span class="badge <%= badgeClass %>" style="font-size: 0.6875rem;"><%= sol.status.replace('_', ' ') %></span>
+                  </div>
+                  
+                  <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: 4px; color: var(--color-text);">
+                    <a href="/industry/solutions/<%= sol._id %>" style="color: inherit; text-decoration: none;"><%= sol.title %></a>
+                  </h2>
+
+                  <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: var(--space-2); line-height: var(--line-height-base);">
+                    <%= sol.description ? sol.description.substring(0, 180) + '...' : '' %>
+                  </p>
+
+                  <div class="dash-problem-meta">
+                    <span>🎓 Lab: <strong><%= sol.submittedBy?.organization || sol.submittedBy?.name %></strong></span>
+                    <span>&bull;</span>
+                    <span>Challenge: <%= sol.challenge?.title %></span>
+                    <span>&bull;</span>
+                    <span>Budget: ₹<%= Number(sol.estimatedCost || 0).toLocaleString('en-IN') %></span>
+                    <% if (sol.matchedCapabilities && sol.matchedCapabilities.length > 0) { %>
+                      <span>&bull;</span>
+                      <span style="color: var(--color-success); font-weight: var(--font-weight-semibold);">Matching Skills: <%= sol.matchedCapabilities.slice(0, 3).join(', ') %></span>
+                    <% } %>
+                  </div>
+                </div>
+                
+                <div class="dash-problem-side" style="flex-direction: column; align-items: flex-end; gap: var(--space-2);">
+                  <a href="/industry/solutions/<%= sol._id %>" class="btn btn-primary btn-sm btn-block">
+                    View Details & Collaborate &rarr;
+                  </a>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+
+        <% } else { %>
+          
+          <div class="state-box">
+            <svg class="state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <h2 class="state-title">No solutions match your criteria</h2>
+            <p class="state-desc">
+              Try adjusting your filter options or explore active civic challenges to sponsor.
+            </p>
+            <a href="/industry/solutions" class="btn btn-secondary btn-sm">Reset Filters</a>
+          </div>
+
+        <% } %>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

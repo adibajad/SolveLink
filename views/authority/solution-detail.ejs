@@ -79,20 +79,61 @@
             <!-- Technical Summary & Approach -->
             <div class="problem-section">
               <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3);">
-                Technical Description & Methodology
+                Technical Description & Proposed Mechanism
               </h2>
               <div class="detail-text">
                 <p style="white-space: pre-line;"><%= solution.description %></p>
               </div>
 
-              <!-- Technology Stack -->
-              <% if (solution.technology && solution.technology.length > 0) { %>
+              <!-- Technical Approach -->
+              <% if (solution.technicalApproach) { %>
                 <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-top: var(--space-6); margin-bottom: var(--space-2);">
-                  Technologies & Engineering Tools
+                  Technical Approach & Architecture
+                </h3>
+                <div class="detail-text">
+                  <p style="white-space: pre-line;"><%= solution.technicalApproach %></p>
+                </div>
+              <% } %>
+
+              <!-- Implementation Details -->
+              <% if (solution.implementationDetails) { %>
+                <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-top: var(--space-6); margin-bottom: var(--space-2);">
+                  Pilot Implementation & Deployment Plan
+                </h3>
+                <div class="detail-text">
+                  <p style="white-space: pre-line;"><%= solution.implementationDetails %></p>
+                </div>
+              <% } %>
+
+              <!-- Technology Stack & Skills -->
+              <% if ((solution.technology && solution.technology.length > 0) || (solution.skills && solution.skills.length > 0)) { %>
+                <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-top: var(--space-6); margin-bottom: var(--space-2);">
+                  Technologies, Skills & Engineering Tools
                 </h3>
                 <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
-                  <% solution.technology.forEach(function(tech) { %>
-                    <span class="badge badge-neutral"><%= tech %></span>
+                  <% if (solution.skills && solution.skills.length > 0) { %>
+                    <% solution.skills.forEach(function(sk) { %>
+                      <span class="badge badge-primary"><%= sk %></span>
+                    <% }); %>
+                  <% } %>
+                  <% if (solution.technology && solution.technology.length > 0) { %>
+                    <% solution.technology.forEach(function(tech) { %>
+                      <span class="badge badge-neutral"><%= tech %></span>
+                    <% }); %>
+                  <% } %>
+                </div>
+              <% } %>
+
+              <!-- File Attachments -->
+              <% if (solution.attachments && solution.attachments.length > 0) { %>
+                <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-top: var(--space-6); margin-bottom: var(--space-2);">
+                  Submitted Documents & Schematics
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                  <% solution.attachments.forEach(function(att, idx) { %>
+                    <a href="<%= att %>" target="_blank" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: var(--space-2); max-width: fit-content;">
+                      📄 View Attachment <%= idx + 1 %>
+                    </a>
                   <% }); %>
                 </div>
               <% } %>
@@ -121,6 +162,42 @@
                 </p>
               </div>
             </div>
+
+            <!-- Industry Collaboration Partners Section -->
+            <% if (typeof industryCollaborations !== 'undefined' && industryCollaborations && industryCollaborations.length > 0) { %>
+              <div class="problem-section">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
+                  <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: 0;">
+                    🤝 Matched Industry Partners Offering Support (<%= industryCollaborations.length %>)
+                  </h2>
+                  <span class="badge badge-success">Active Expressions</span>
+                </div>
+
+                <div class="dash-problem-list">
+                  <% industryCollaborations.forEach(function(collab) { %>
+                    <div class="dash-problem-card" style="padding: var(--space-4);">
+                      <div class="dash-problem-info">
+                        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 4px;">
+                          <strong><%= collab.industry?.name %></strong>
+                          <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= collab.industry?.organization || 'Industry Partner' %></span>
+                          <span class="badge badge-neutral" style="font-size: 0.6875rem;"><%= (collab.supportType || 'Pilot').replace('_', ' ') %></span>
+                        </div>
+                        <div class="dash-problem-meta">
+                          <span>📍 <%= collab.industry?.location || 'Jharkhand' %></span>
+                          <span>&bull;</span>
+                          <span>Email: <%= collab.industry?.email %></span>
+                        </div>
+                        <% if (collab.message) { %>
+                          <p style="font-size: var(--font-size-xs); color: var(--color-text); margin-top: 6px; margin-bottom: 0; background: var(--color-surface-soft); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);">
+                            "<%= collab.message %>"
+                          </p>
+                        <% } %>
+                      </div>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+            <% } %>
 
             <!-- Team Composition -->
             <% if (solution.team && solution.team.members && solution.team.members.length > 0) { %>
@@ -231,6 +308,9 @@
                 <!-- Decision Actions -->
                 <label class="form-label">Select Evaluation Decision</label>
                 <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                  <button type="submit" name="decision" value="UNDER_REVIEW" class="btn btn-outline btn-sm btn-block">
+                    ⏳ Mark as Under Review
+                  </button>
                   <button type="submit" name="decision" value="SHORTLIST" class="btn btn-secondary btn-sm btn-block">
                     ★ Shortlist Proposal
                   </button>

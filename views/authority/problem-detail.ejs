@@ -119,60 +119,61 @@
             <div class="ai-analysis-card">
               <div class="ai-analysis-header">
                 <div style="display: flex; align-items: center; gap: var(--space-2);">
-                  <span class="ai-badge">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                    </svg>
-                    AI Decision Support
+            <div class="problem-section ai-insights-card">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4);">
+                <div style="display: flex; align-items: center; gap: var(--space-2);">
+                  <span class="badge badge-primary">AI Engine Analysis</span>
+                  <span class="badge <%= problem.assignmentStatus === 'assigned' ? 'badge-success' : (problem.assignmentStatus === 'verified' ? 'badge-primary' : 'badge-warning') %>">
+                    <%= (problem.assignmentStatus || 'pending').toUpperCase() %>
                   </span>
-                  <span class="text-muted" style="font-size: var(--font-size-xs);">Triage Analysis Summary</span>
                 </div>
-                <span class="text-muted" style="font-size: var(--font-size-xs);">Confidence: 92%</span>
+                <span class="text-muted" style="font-size: var(--font-size-xs);">
+                  AI Confidence: <%= problem.aiClassification && problem.aiClassification.confidence ? Math.round(problem.aiClassification.confidence * 100) + '%' : '92%' %>
+                </span>
               </div>
 
-              <div class="ai-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+              <!-- Structured AI Classification & Routing Grid -->
+              <div class="ai-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: var(--space-3);">
                 <div class="ai-metric-pill">
-                  <div class="ai-metric-title">Category</div>
-                  <div class="ai-metric-val" style="color: var(--color-primary);"><%= problem.category %></div>
-                </div>
-
-                <%
-                  const rawSentiment = (problem.sentiment && problem.sentiment.label) ? problem.sentiment.label : (problem.aiAnalysis && problem.aiAnalysis.sentiment ? problem.aiAnalysis.sentiment.label : 'neutral');
-                  const sentimentLabel = rawSentiment.charAt(0).toUpperCase() + rawSentiment.slice(1);
-                  const sentimentScore = problem.sentiment && problem.sentiment.score !== undefined ? problem.sentiment.score : (problem.aiAnalysis && problem.aiAnalysis.sentiment ? problem.aiAnalysis.sentiment.score : 0.5);
-                  let sentimentColor = 'var(--color-text)';
-                  if (rawSentiment === 'negative') sentimentColor = 'var(--color-danger)';
-                  else if (rawSentiment === 'positive') sentimentColor = 'var(--color-success)';
-                %>
-                <div class="ai-metric-pill">
-                  <div class="ai-metric-title">Sentiment</div>
-                  <div class="ai-metric-val" style="color: <%= sentimentColor %>;">
-                    <%= sentimentLabel %>
-                    <span style="font-size: 0.6875rem; font-weight: var(--font-weight-normal); color: var(--color-text-muted); display: block;">
-                      Score: <%= Number(sentimentScore).toFixed(2) %>
-                    </span>
+                  <div class="ai-metric-title">AI Domain</div>
+                  <div class="ai-metric-val" style="color: var(--color-primary);">
+                    <%= problem.aiClassification && problem.aiClassification.domain ? problem.aiClassification.domain.replace(/_/g, ' ') : problem.category %>
                   </div>
                 </div>
 
                 <div class="ai-metric-pill">
-                  <div class="ai-metric-title">Severity</div>
-                  <div class="ai-metric-val" style="color: <%= problem.severity === 'CRITICAL' ? 'var(--color-danger)' : 'var(--color-text)' %>;">
-                    <%= problem.severity || 'MEDIUM' %>
+                  <div class="ai-metric-title">Sub-Category</div>
+                  <div class="ai-metric-val">
+                    <%= problem.aiClassification && problem.aiClassification.subCategory ? problem.aiClassification.subCategory.replace(/_/g, ' ') : (problem.aiClassification ? problem.aiClassification.category : 'General') %>
                   </div>
                 </div>
 
-                <% 
-                  const hasDuplicates = problem.similarProblems && problem.similarProblems.length > 0;
-                  const duplicateText = hasDuplicates ? 'Potential Duplicate' : 'Unique Report';
-                  const duplicateColor = hasDuplicates ? 'var(--color-warning)' : 'var(--color-success)';
-                %>
                 <div class="ai-metric-pill">
-                  <div class="ai-metric-title">Duplicate Status</div>
-                  <div class="ai-metric-val" style="color: <%= duplicateColor %>;">
-                    <%= duplicateText %>
+                  <div class="ai-metric-title">Urgency</div>
+                  <div class="ai-metric-val" style="color: <%= (problem.aiClassification && problem.aiClassification.urgency === 'CRITICAL') || problem.severity === 'CRITICAL' ? 'var(--color-danger)' : 'var(--color-text)' %>;">
+                    <%= (problem.aiClassification && problem.aiClassification.urgency) || problem.severity || 'MEDIUM' %>
+                  </div>
+                </div>
+
+                <div class="ai-metric-pill">
+                  <div class="ai-metric-title">Assigned To</div>
+                  <div class="ai-metric-val" style="font-size: 0.8125rem;">
+                    <%= problem.assignedAuthority ? problem.assignedAuthority.name : 'Central Triage' %>
                   </div>
                 </div>
               </div>
+
+              <!-- Authority Routing Explanatory Box -->
+              <% if (problem.assignmentReason) { %>
+                <div style="background-color: var(--color-surface); border-left: 3px solid var(--color-primary); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-3); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;">
+                  <span style="font-size: 11px; font-weight: var(--font-weight-bold); text-transform: uppercase; color: var(--color-text-muted); display: block; margin-bottom: 2px;">
+                    Department Routing Rationale
+                  </span>
+                  <p style="font-size: var(--font-size-xs); margin-bottom: 0; color: var(--color-text);">
+                    <%= problem.assignmentReason %>
+                  </p>
+                </div>
+              <% } %>
 
               <!-- Sentiment & Severity Guidance Note -->
               <p class="text-muted" style="font-size: var(--font-size-xs); margin-top: var(--space-3); margin-bottom: var(--space-3); line-height: 1.4;">
@@ -277,6 +278,33 @@
 
                 <button type="submit" class="btn btn-secondary btn-block btn-sm">
                   Update Problem Status
+                </button>
+              </form>
+
+              <!-- Classification Correction & Reassignment Form -->
+              <form action="/authority/problems/<%= problem._id %>/status" method="POST" style="margin-bottom: var(--space-4);">
+                <label for="correctDomainSelect" class="form-label" style="font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; color: var(--color-text-muted);">
+                  Verify / Correct AI Classification
+                </label>
+                <select id="correctDomainSelect" name="correctedDomain" class="form-select" style="margin-bottom: var(--space-2); font-size: var(--font-size-xs);">
+                  <option value="">-- Keep Current Classification --</option>
+                  <% if (typeof sectors !== 'undefined' && sectors) { %>
+                    <% sectors.forEach(function(sec) { %>
+                      <option value="<%= sec.key %>" <%= (problem.aiClassification && problem.aiClassification.domain === sec.key) ? 'selected' : '' %>>
+                        <%= sec.label %>
+                      </option>
+                    <% }); %>
+                  <% } %>
+                </select>
+                <input 
+                  type="text" 
+                  name="reassignNotes" 
+                  class="form-input" 
+                  style="font-size: var(--font-size-xs); margin-bottom: var(--space-2);" 
+                  placeholder="Optional routing note (e.g. Belongs to PWD)" 
+                />
+                <button type="submit" class="btn btn-outline btn-block btn-sm">
+                  Verify & Re-route Problem
                 </button>
               </form>
 

@@ -57,6 +57,17 @@
               />
             </div>
 
+            <!-- Assignment Status -->
+            <div class="filter-group">
+              <label for="filterAssignment" class="filter-label">Assignment Queue</label>
+              <select id="filterAssignment" name="assignmentStatus" class="filter-select">
+                <option value="">All Assigned to Me</option>
+                <option value="assigned" <%= (typeof query !== 'undefined' && query.assignmentStatus === 'assigned') ? 'selected' : '' %>>Directly Assigned</option>
+                <option value="needs_review" <%= (typeof query !== 'undefined' && query.assignmentStatus === 'needs_review') ? 'selected' : '' %>>Needs Review / Triage</option>
+                <option value="verified" <%= (typeof query !== 'undefined' && query.assignmentStatus === 'verified') ? 'selected' : '' %>>Verified</option>
+              </select>
+            </div>
+
             <!-- Status -->
             <div class="filter-group">
               <label for="filterStatus" class="filter-label">Status</label>
@@ -71,23 +82,28 @@
               </select>
             </div>
 
-            <!-- Category -->
+            <!-- Category / Domain -->
             <div class="filter-group">
-              <label for="filterCategory" class="filter-label">Category</label>
-              <select id="filterCategory" name="category" class="filter-select">
-                <option value="">All Categories</option>
-                <option value="Infrastructure" <%= (typeof query !== 'undefined' && query.category === 'Infrastructure') ? 'selected' : '' %>>Infrastructure</option>
-                <option value="Water & Sanitation" <%= (typeof query !== 'undefined' && query.category === 'Water & Sanitation') ? 'selected' : '' %>>Water & Sanitation</option>
-                <option value="Public Health" <%= (typeof query !== 'undefined' && query.category === 'Public Health') ? 'selected' : '' %>>Public Health</option>
-                <option value="Agriculture & Energy" <%= (typeof query !== 'undefined' && query.category === 'Agriculture & Energy') ? 'selected' : '' %>>Agriculture & Energy</option>
-                <option value="Waste Management" <%= (typeof query !== 'undefined' && query.category === 'Waste Management') ? 'selected' : '' %>>Waste Management</option>
-                <option value="Education & Digital" <%= (typeof query !== 'undefined' && query.category === 'Education & Digital') ? 'selected' : '' %>>Education & Digital</option>
+              <label for="filterCategory" class="filter-label">Domain / Sector</label>
+              <select id="filterCategory" name="domain" class="filter-select">
+                <option value="">All Sectors</option>
+                <% if (typeof sectors !== 'undefined' && sectors) { %>
+                  <% sectors.forEach(function(sec) { %>
+                    <option value="<%= sec.key %>" <%= (typeof query !== 'undefined' && query.domain === sec.key) ? 'selected' : '' %>><%= sec.label %></option>
+                  <% }); %>
+                <% } else { %>
+                  <option value="water_sanitation">Water & Sanitation</option>
+                  <option value="public_works_infrastructure">Public Works & Infrastructure</option>
+                  <option value="public_health">Public Health</option>
+                  <option value="agriculture">Agriculture</option>
+                  <option value="energy">Energy</option>
+                <% } %>
               </select>
             </div>
 
             <!-- Priority -->
             <div class="filter-group">
-              <label for="filterPriority" class="filter-label">AI Priority</label>
+              <label for="filterPriority" class="filter-label">Urgency / Priority</label>
               <select id="filterPriority" name="priority" class="filter-select">
                 <option value="">All Priorities</option>
                 <option value="CRITICAL" <%= (typeof query !== 'undefined' && query.priority === 'CRITICAL') ? 'selected' : '' %>>Critical</option>
@@ -112,7 +128,7 @@
 
             <div style="display: flex; align-items: flex-end; gap: var(--space-2);">
               <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-              <% if (typeof query !== 'undefined' && (query.q || query.status || query.category || query.priority || query.location)) { %>
+              <% if (typeof query !== 'undefined' && (query.q || query.status || query.category || query.domain || query.assignmentStatus || query.priority || query.location)) { %>
                 <a href="/authority/problems" class="btn btn-ghost btn-sm">Clear</a>
               <% } %>
             </div>
@@ -132,16 +148,43 @@
               else if (prob.status === 'REJECTED') badgeClass = 'badge-danger';
 
               let prioBadge = 'badge-neutral';
-              if (prob.priority === 'CRITICAL') prioBadge = 'badge-danger';
-              else if (prob.priority === 'HIGH') prioBadge = 'badge-warning';
-              else if (prob.priority === 'MEDIUM') prioBadge = 'badge-primary';
+              const urgencyVal = (prob.aiClassification && prob.aiClassification.urgency) || prob.priority || 'MEDIUM';
+              if (urgencyVal === 'CRITICAL') prioBadge = 'badge-danger';
+              else if (urgencyVal === 'HIGH') prioBadge = 'badge-warning';
+              else if (urgencyVal === 'MEDIUM') prioBadge = 'badge-primary';
+
+              let assignBadge = 'badge-neutral';
+              let assignText = 'Pending';
+              if (prob.assignmentStatus === 'assigned') {
+                assignBadge = 'badge-success';
+                assignText = 'Assigned';
+              } else if (prob.assignmentStatus === 'needs_review') {
+                assignBadge = 'badge-warning';
+                assignText = 'Needs Review';
+              } else if (prob.assignmentStatus === 'verified') {
+                assignBadge = 'badge-primary';
+                assignText = 'Verified';
+              }
             %>
               <a href="/authority/problems/<%= prob._id %>" class="dash-problem-card" style="padding: var(--space-5);">
                 <div class="dash-problem-info">
-                  <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 3px;">
-                    <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= prob.category %></span>
-                    <span class="badge <%= prioBadge %>" style="font-size: 0.6875rem;"><%= prob.priority %> Priority</span>
-                    <span class="badge <%= badgeClass %>" style="font-size: 0.6875rem;"><%= prob.status.replace('_', ' ') %></span>
+                  <div style="display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-bottom: 4px;">
+                    <span class="badge badge-primary" style="font-size: 0.6875rem;">
+                      <%= (prob.aiClassification && prob.aiClassification.domain) ? prob.aiClassification.domain.replace(/_/g, ' ').toUpperCase() : prob.category %>
+                    </span>
+                    <% if (prob.aiClassification && prob.aiClassification.category) { %>
+                      <span class="badge badge-neutral" style="font-size: 0.6875rem;">
+                        <%= prob.aiClassification.category.replace(/_/g, ' ') %>
+                      </span>
+                    <% } %>
+                    <span class="badge <%= prioBadge %>" style="font-size: 0.6875rem;"><%= urgencyVal %> Urgency</span>
+                    <span class="badge <%= assignBadge %>" style="font-size: 0.6875rem;"><%= assignText %></span>
+                    <span class="badge <%= badgeClass %>" style="font-size: 0.6875rem;"><%= prob.status.replace(/_/g, ' ') %></span>
+                    <% if (prob.aiClassification && prob.aiClassification.confidence) { %>
+                      <span style="font-size: 0.6875rem; color: var(--color-text-muted);">
+                        ⚡ <%= Math.round(prob.aiClassification.confidence * 100) %>% AI Confidence
+                      </span>
+                    <% } %>
                   </div>
                   
                   <span class="dash-problem-title" style="font-size: var(--font-size-base);"><%= prob.title %></span>
@@ -149,11 +192,15 @@
                   <div class="dash-problem-meta" style="margin-top: 4px;">
                     <span>📍 <%= prob.location %></span>
                     <span>&bull;</span>
-                    <span>👥 <%= prob.supporters ? prob.supporters.length : 1 %> Community Supporters</span>
+                    <span>👥 <%= prob.supporters ? prob.supporters.length : 1 %> Supporters</span>
                     <span>&bull;</span>
                     <span>Reported by <%= prob.reportedBy ? prob.reportedBy.name : 'Citizen' %></span>
                     <span>&bull;</span>
-                    <span><%= new Date(prob.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                    <span>Submitted <%= new Date(prob.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                    <% if (prob.assignmentReason) { %>
+                      <span>&bull;</span>
+                      <span style="font-style: italic; color: var(--color-text-muted);"><%= prob.assignmentReason %></span>
+                    <% } %>
                   </div>
                 </div>
                 

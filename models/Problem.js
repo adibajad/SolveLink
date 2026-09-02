@@ -145,6 +145,35 @@ const problemSchema = new mongoose.Schema(
       confidenceScore: { type: Number, default: 0 },
       tags: [{ type: String }],
       analyzedAt: { type: Date }
+    },
+    // Structured AI Problem Classification
+    aiClassification: {
+      domain: { type: String, trim: true, default: '' },
+      category: { type: String, trim: true, default: '' },
+      subCategory: { type: String, trim: true, default: '' },
+      urgency: {
+        type: String,
+        enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'],
+        default: 'MEDIUM'
+      },
+      confidence: { type: Number, default: 0 },
+      classifiedAt: { type: Date }
+    },
+    // Problem -> Authority Routing
+    assignedAuthority: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    assignmentStatus: {
+      type: String,
+      enum: ['pending', 'assigned', 'needs_review', 'verified', 'resolved'],
+      default: 'pending'
+    },
+    assignmentReason: {
+      type: String,
+      trim: true,
+      default: ''
     }
   },
   {

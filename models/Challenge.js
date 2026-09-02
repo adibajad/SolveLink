@@ -45,7 +45,30 @@ const challengeSchema = new mongoose.Schema(
         trim: true
       }
     ],
+    requiredTechnologies: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
+    authoritySector: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: ''
+    },
+    domainName: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     constraints: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
+    requirements: [
       {
         type: String,
         trim: true
@@ -70,6 +93,8 @@ const challengeSchema = new mongoose.Schema(
       enum: [
         'DRAFT',
         'PUBLISHED',
+        'OPEN',
+        'UNDER_REVIEW',
         'CLOSED',
         'SOLUTION_SELECTED',
         'APPROVED',
@@ -91,9 +116,19 @@ const challengeSchema = new mongoose.Schema(
     }
   },
   {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+// Virtual aliases for naming flexibility
+challengeSchema.virtual('domain').get(function() {
+  return this.domainName || this.category;
+});
+challengeSchema.virtual('authorityId').get(function() {
+  return this.createdBy;
+});
 
 const Challenge = mongoose.model('Challenge', challengeSchema);
 

@@ -1,6 +1,11 @@
+const mongoose = require('mongoose');
+const User = require('../models/User');
 const Problem = require('../models/Problem');
 const Challenge = require('../models/Challenge');
 const Solution = require('../models/Solution');
+const Collaboration = require('../models/Collaboration');
+const aiService = require('../services/aiService');
+const matchingService = require('../services/matchingService');
 
 /**
  * Authority Command Center Dashboard
@@ -8,18 +13,47 @@ const Solution = require('../models/Solution');
 const getAuthorityDashboard = async (req, res, next) => {
   try {
     const userId = req.user.id || req.user._id;
+    const userDoc = await User.findById(userId).lean();
+    const currentUser = userDoc || req.user;
+    const isAuthority = currentUser.role === 'authority';
+    const isAdmin = currentUser.role === 'admin';
+
+    // Build scoped filter for authority
+    let problemScopeFilter = {};
+    if (isAuthority && !isAdmin) {
+      const sector = currentUser.authoritySector || '';
+      problemScopeFilter = {
+        $or: [
+          { assignedAuthority: userId },
+          ...(sector ? [{ 'aiClassification.domain': sector }] : [])
+        ]
+      };
+    }
 
     // 1. Core Metrics
-    const totalProblems = await Problem.countDocuments();
+    const totalProblems = await Problem.countDocuments(problemScopeFilter);
     const pendingVerification = await Problem.countDocuments({
+      ...problemScopeFilter,
       status: { $in: ['REPORTED', 'UNDER_VERIFICATION'] }
     });
+
+    const challengeScope = isAuthority && !isAdmin ? { createdBy: userId } : {};
     const activeChallenges = await Challenge.countDocuments({
-      status: { $in: ['PUBLISHED', 'DRAFT'] }
+      ...challengeScope,
+      status: { $in: ['PUBLISHED', 'DRAFT', 'OPEN'] }
     });
-    const totalSolutions = await Solution.countDocuments();
+
+    const myChallenges = await Challenge.find({ createdBy: userId })
+      .sort({ createdAt: -1 })
+      .lean();
+    const myChallengeIds = myChallenges.map(c => c._id);
+
+    const totalSolutions = await Solution.countDocuments(
+      isAuthority && !isAdmin ? { challenge: { $in: myChallengeIds } } : {}
+    );
     const implementations = await Challenge.countDocuments({
-      status: { $in: ['APPROVED', 'IMPLEMENTATION', 'COMPLETED'] }
+      ...challengeScope,
+      status: { $in: ['APPROVED', 'IMPLEMENTATION', 'COMPLETED', 'SOLUTION_SELECTED'] }
     });
 
     const metrics = {
@@ -30,22 +64,20 @@ const getAuthorityDashboard = async (req, res, next) => {
       implementations
     };
 
-    // 2. High Priority Problems requiring verification
+    // 2. High Priority Problems requiring verification (scoped to this authority)
     const priorityProblems = await Problem.find({
+      ...problemScopeFilter,
       status: { $in: ['REPORTED', 'UNDER_VERIFICATION'] }
     })
+      .populate('assignedAuthority', 'name organization department authoritySector')
+      .populate('reportedBy', 'name organization')
       .sort({ severity: -1, createdAt: -1 })
       .limit(6)
       .lean();
 
-    // 3. Authority's Recent Challenges
-    const myChallenges = await Challenge.find({ createdBy: userId })
-      .sort({ createdAt: -1 })
-      .limit(4)
-      .lean();
-
-    // 4. Solutions pending review
+    // 3. Solutions pending review on authority's challenges
     const pendingSolutions = await Solution.find({
+      ...(isAuthority && !isAdmin ? { challenge: { $in: myChallengeIds } } : {}),
       status: { $in: ['SUBMITTED', 'UNDER_REVIEW'] }
     })
       .populate('challenge', 'title category')
@@ -56,10 +88,10 @@ const getAuthorityDashboard = async (req, res, next) => {
 
     res.render('authority/dashboard', {
       activePath: '/authority/dashboard',
-      user: req.user,
+      user: currentUser,
       metrics,
       priorityProblems,
-      myChallenges,
+      myChallenges: myChallenges.slice(0, 4),
       pendingSolutions
     });
   } catch (error) {
@@ -72,30 +104,54 @@ const getAuthorityDashboard = async (req, res, next) => {
  */
 const getAuthorityProblems = async (req, res, next) => {
   try {
-    const { status, category, location, priority, q } = req.query;
-    const filter = {};
+    const userId = req.user.id || req.user._id;
+    const userDoc = await User.findById(userId).lean();
+    const currentUser = userDoc || req.user;
+    const isAuthority = currentUser.role === 'authority';
+    const isAdmin = currentUser.role === 'admin';
+
+    const { status, category, domain, assignmentStatus, location, priority, q } = req.query;
+
+    let filter = {};
+    if (isAuthority && !isAdmin) {
+      const sector = currentUser.authoritySector || '';
+      filter = {
+        $or: [
+          { assignedAuthority: userId },
+          ...(sector ? [{ 'aiClassification.domain': sector }] : [])
+        ]
+      };
+    }
 
     if (status) filter.status = status;
+    if (assignmentStatus) filter.assignmentStatus = assignmentStatus;
+    if (domain) filter['aiClassification.domain'] = domain;
     if (category) filter.category = category;
     if (priority) filter.priority = priority;
     if (location) filter.location = new RegExp(location, 'i');
     if (q) {
-      filter.$or = [
-        { title: new RegExp(q, 'i') },
-        { description: new RegExp(q, 'i') },
-        { location: new RegExp(q, 'i') }
-      ];
+      const qRegex = new RegExp(q, 'i');
+      filter.$and = filter.$and || [];
+      filter.$and.push({
+        $or: [
+          { title: qRegex },
+          { description: qRegex },
+          { location: qRegex }
+        ]
+      });
     }
 
     const problems = await Problem.find(filter)
       .populate('reportedBy', 'name organization')
+      .populate('assignedAuthority', 'name organization department authoritySector jurisdiction')
       .sort({ createdAt: -1 })
       .lean();
 
     res.render('authority/problems', {
       activePath: '/authority/problems',
-      user: req.user,
+      user: currentUser,
       problems,
+      sectors: aiService.CIVIC_SECTORS,
       query: req.query
     });
   } catch (error) {
@@ -110,8 +166,20 @@ const getAuthorityProblemDetail = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).render('authority/problems', {
+        activePath: '/authority/problems',
+        user: req.user,
+        problems: [],
+        sectors: aiService.CIVIC_SECTORS,
+        query: {},
+        error: 'Problem not found.'
+      });
+    }
+
     const problem = await Problem.findById(id)
       .populate('reportedBy', 'name email organization location role')
+      .populate('assignedAuthority', 'name email organization department authoritySector jurisdiction')
       .populate('supporters', 'name role')
       .populate('similarProblems', 'title category location status priority createdAt')
       .lean();
@@ -121,6 +189,7 @@ const getAuthorityProblemDetail = async (req, res, next) => {
         activePath: '/authority/problems',
         user: req.user,
         problems: [],
+        sectors: aiService.CIVIC_SECTORS,
         query: {},
         error: 'Problem not found.'
       });
@@ -134,7 +203,8 @@ const getAuthorityProblemDetail = async (req, res, next) => {
       user: req.user,
       problem,
       associatedChallenge,
-      successMsg: req.query.updated ? 'Problem status updated successfully.' : null
+      sectors: aiService.CIVIC_SECTORS,
+      successMsg: req.query.updated ? 'Problem updated successfully.' : null
     });
   } catch (error) {
     next(error);
@@ -142,12 +212,16 @@ const getAuthorityProblemDetail = async (req, res, next) => {
 };
 
 /**
- * Update Problem Verification Status
+ * Update Problem Verification Status & Reassignment
  */
 const postUpdateProblemStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, correctedDomain, reassignNotes } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid problem ID.' });
+    }
 
     const validStatuses = [
       'REPORTED',
@@ -158,13 +232,46 @@ const postUpdateProblemStatus = async (req, res, next) => {
       'CHALLENGE_CREATED'
     ];
 
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Invalid problem status.' });
+    const updateFields = {};
+
+    if (status && validStatuses.includes(status)) {
+      updateFields.status = status;
+      if (status === 'VERIFIED') {
+        updateFields.assignmentStatus = 'verified';
+      }
+    }
+
+    // Handle classification correction or reassignment
+    if (correctedDomain && correctedDomain.trim()) {
+      const cleanDomain = correctedDomain.trim().toLowerCase();
+      const existingProb = await Problem.findById(id);
+
+      if (existingProb) {
+        updateFields['aiClassification.domain'] = cleanDomain;
+        const sectorObj = aiService.CIVIC_SECTORS.find(s => s.key === cleanDomain);
+        if (sectorObj) {
+          updateFields.category = sectorObj.label;
+        }
+
+        // Re-route problem via matching engine
+        const reRouteResult = await matchingService.matchAuthorityForProblem(
+          {
+            domain: cleanDomain,
+            category: existingProb.aiClassification?.category || '',
+            subCategory: existingProb.aiClassification?.subCategory || ''
+          },
+          existingProb.location
+        );
+
+        updateFields.assignedAuthority = reRouteResult.bestAuthority ? reRouteResult.bestAuthority._id : null;
+        updateFields.assignmentStatus = reRouteResult.assignmentStatus;
+        updateFields.assignmentReason = `Reassigned by authority: ${reRouteResult.assignmentReason}${reassignNotes ? ' Note: ' + reassignNotes.trim() : ''}`;
+      }
     }
 
     const updated = await Problem.findByIdAndUpdate(
       id,
-      { status },
+      { $set: updateFields },
       { new: true }
     );
 
@@ -173,7 +280,7 @@ const postUpdateProblemStatus = async (req, res, next) => {
     }
 
     if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
-      return res.json({ success: true, status: updated.status });
+      return res.json({ success: true, problem: updated });
     }
 
     res.redirect(`/authority/problems/${id}?updated=true`);
@@ -222,21 +329,27 @@ const getCreateChallenge = async (req, res, next) => {
       sourceProblem = await Problem.findById(problemId).lean();
     }
 
+    const defaultSector = sourceProblem?.aiClassification?.domain || req.user.authoritySector || 'municipal_corporation';
+
     // Default prefilled values from verified problem or blank
     const prefill = {
       sourceProblemId: sourceProblem ? sourceProblem._id : '',
       title: sourceProblem ? `Innovation Challenge: ${sourceProblem.title}` : '',
       description: sourceProblem ? sourceProblem.description : '',
       category: sourceProblem ? sourceProblem.category : 'Infrastructure',
+      domain: sourceProblem?.category || 'Infrastructure',
+      authoritySector: defaultSector,
       location: sourceProblem ? sourceProblem.location : (req.user.location || 'Jharkhand'),
-      department: req.user.organization || 'District Municipal Administration',
+      department: req.user.department || req.user.organization || 'District Municipal Administration',
       expectedOutcome: sourceProblem?.aiAnalysis?.summary 
         ? `Deploy a tested engineering prototype and operational system to resolve the root cause: "${sourceProblem.aiAnalysis.summary}".` 
         : '',
       requiredSkills: sourceProblem?.aiAnalysis?.tags?.length 
         ? sourceProblem.aiAnalysis.tags.join(', ') 
         : 'Civil Engineering, IoT, Field Prototyping',
+      requiredTechnologies: '',
       constraints: 'Cost must remain within standard district grant limits; Solutions must use locally serviceable components.',
+      requirements: 'Must comply with municipal safety norms and use open telemetry standards.',
       evaluationCriteria: 'Technical Feasibility (30%), Cost Efficiency (25%), Community Impact (25%), Scalability (20%)',
       deadline: ''
     };
@@ -245,6 +358,7 @@ const getCreateChallenge = async (req, res, next) => {
       activePath: '/authority/create-challenge',
       user: req.user,
       sourceProblem,
+      sectors: aiService.CIVIC_SECTORS,
       prefill,
       error: null
     });
@@ -262,10 +376,14 @@ const postCreateChallenge = async (req, res, next) => {
       title,
       description,
       category,
+      domain,
+      authoritySector,
       location,
       department,
       requiredSkills,
+      requiredTechnologies,
       constraints,
+      requirements,
       expectedOutcome,
       evaluationCriteria,
       deadline,
@@ -275,24 +393,27 @@ const postCreateChallenge = async (req, res, next) => {
 
     const userId = req.user.id || req.user._id;
 
-    if (!title || !description || !category || !department) {
+    if (!title || !description || (!category && !domain) || !department) {
       return res.status(400).render('authority/create-challenge', {
         activePath: '/authority/create-challenge',
         user: req.user,
         sourceProblem: sourceProblemId ? await Problem.findById(sourceProblemId).lean() : null,
+        sectors: aiService.CIVIC_SECTORS,
         prefill: req.body,
-        error: 'Title, description, category, and department are required fields.'
+        error: 'Title, description, sector/category, and department are required fields.'
       });
     }
 
     // Parse array fields
     const parseList = (val) => {
       if (!val) return [];
-      if (Array.isArray(val)) return val;
-      return val.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      if (Array.isArray(val)) return val.map(s => String(s).trim()).filter(s => s.length > 0);
+      return String(val).split(',').map(s => s.trim()).filter(s => s.length > 0);
     };
 
     const status = action === 'publish' ? 'PUBLISHED' : 'DRAFT';
+    const sectorKey = (authoritySector || req.user.authoritySector || 'municipal_corporation').trim().toLowerCase();
+    const domainStr = (domain || category || 'General Civic').trim();
 
     // Verify source problem or find fallback
     let sourceId = sourceProblemId;
@@ -304,7 +425,7 @@ const postCreateChallenge = async (req, res, next) => {
         const seedProblem = await Problem.create({
           title: `Municipal Brief: ${title}`,
           description: description,
-          category: category,
+          category: domainStr,
           location: location || 'District Jurisdiction',
           reportedBy: userId,
           status: 'VERIFIED'
@@ -313,14 +434,23 @@ const postCreateChallenge = async (req, res, next) => {
       }
     }
 
+    const skillsList = parseList(requiredSkills);
+    const techList = parseList(requiredTechnologies);
+    const constraintsList = parseList(constraints || requirements);
+    const requirementsList = parseList(requirements || constraints);
+
     const newChallenge = await Challenge.create({
       title: title.trim(),
       description: description.trim(),
-      category: category.trim(),
+      category: domainStr,
+      domainName: domainStr,
+      authoritySector: sectorKey,
       location: location ? location.trim() : '',
       department: department.trim(),
-      requiredSkills: parseList(requiredSkills),
-      constraints: parseList(constraints),
+      requiredSkills: skillsList,
+      requiredTechnologies: techList,
+      constraints: constraintsList,
+      requirements: requirementsList,
       expectedOutcome: expectedOutcome ? expectedOutcome.trim() : '',
       evaluationCriteria: parseList(evaluationCriteria),
       deadline: deadline ? new Date(deadline) : new Date(Date.now() + 30 * 86400000),
@@ -341,6 +471,7 @@ const postCreateChallenge = async (req, res, next) => {
       activePath: '/authority/create-challenge',
       user: req.user,
       sourceProblem: null,
+      sectors: aiService.CIVIC_SECTORS,
       prefill: req.body,
       error: 'Failed to create challenge due to a server error.'
     });
@@ -399,6 +530,17 @@ const getAuthoritySolutionDetail = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).render('authority/solutions', {
+        activePath: '/authority/solutions',
+        user: req.user,
+        solutions: [],
+        myChallenges: [],
+        query: {},
+        error: 'Solution proposal not found.'
+      });
+    }
+
     const solution = await Solution.findById(id)
       .populate('challenge')
       .populate('submittedBy', 'name email organization role location')
@@ -416,10 +558,17 @@ const getAuthoritySolutionDetail = async (req, res, next) => {
       });
     }
 
+    // Fetch any Industry Collaboration expressions for this proposal
+    const industryCollaborations = await Collaboration.find({ proposal: solution._id })
+      .populate('industry', 'name organization skills location email')
+      .sort({ createdAt: -1 })
+      .lean();
+
     res.render('authority/solution-detail', {
       activePath: '/authority/solutions',
       user: req.user,
       solution,
+      industryCollaborations,
       successMsg: req.query.evaluated ? 'Evaluation submitted and decision recorded.' : null
     });
   } catch (error) {
@@ -445,6 +594,10 @@ const postEvaluateSolution = async (req, res, next) => {
     } = req.body;
 
     const userId = req.user.id || req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid solution ID.' });
+    }
 
     // Calculate total score (out of 100)
     const totalScore = Math.min(
@@ -472,8 +625,11 @@ const postEvaluateSolution = async (req, res, next) => {
       solutionStatus = 'SELECTED';
       challengeUpdateStatus = 'SOLUTION_SELECTED';
     } else if (decision === 'IMPLEMENT') {
-      solutionStatus = 'SELECTED';
+      solutionStatus = 'IMPLEMENTATION';
       challengeUpdateStatus = 'IMPLEMENTATION';
+    } else if (decision === 'UNDER_REVIEW') {
+      solutionStatus = 'UNDER_REVIEW';
+      challengeUpdateStatus = 'UNDER_REVIEW';
     }
 
     const updatedSolution = await Solution.findByIdAndUpdate(

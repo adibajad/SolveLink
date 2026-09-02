@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner with Proposal: <%= solution.title %> — SolveLink Industry</title>
+  
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/problem.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <%- include('../partials/navbar', { activePath: '/industry/solutions' }) %>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <%- include('../partials/sidebar', { role: 'industry', activePath: '/industry/solutions' }) %>
+
+    <!-- Main Content -->
+    <main id="main-content" class="dashboard-main">
+      <div class="dashboard-content">
+        
+        <!-- Breadcrumb -->
+        <div style="margin-bottom: var(--space-4);">
+          <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+            <a href="/industry/dashboard">Industry Portal</a>
+            <span>&bull;</span>
+            <a href="/industry/solutions">Solutions Pipeline</a>
+            <span>&bull;</span>
+            <span aria-current="page"><%= solution.title?.substring(0, 30) %>...</span>
+          </nav>
+        </div>
+
+        <% if (typeof successMsg !== 'undefined' && successMsg) { %>
+          <div class="alert alert-success" style="margin-bottom: var(--space-4);">
+            <span><%= successMsg %></span>
+          </div>
+        <% } %>
+
+        <div class="problem-detail-grid">
+          
+          <!-- Left: Submitter Information & Solution Proposal -->
+          <div class="problem-main-content">
+            
+            <!-- Header Section -->
+            <div class="problem-section">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2);">
+                <span class="badge badge-primary"><%= solution.challenge?.category || 'Civic Tech' %></span>
+
+                <% 
+                  let badgeClass = 'badge-neutral';
+                  if (solution.status === 'SELECTED') badgeClass = 'badge-success';
+                  else if (solution.status === 'SHORTLISTED') badgeClass = 'badge-primary';
+                  else if (solution.status === 'SUBMITTED' || solution.status === 'UNDER_REVIEW') badgeClass = 'badge-warning';
+                  else if (solution.status === 'REJECTED') badgeClass = 'badge-danger';
+                %>
+                <span class="badge <%= badgeClass %>">Status: <%= solution.status.replace('_', ' ') %></span>
+              </div>
+
+              <h1 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); line-height: 1.2; margin-bottom: var(--space-3);">
+                <%= solution.title %>
+              </h1>
+
+              <div style="display: flex; align-items: center; gap: var(--space-4); font-size: var(--font-size-xs); color: var(--color-text-muted); flex-wrap: wrap;">
+                <span>Addressing: <strong><a href="/challenges/<%= solution.challenge?._id %>"><%= solution.challenge?.title %></a></strong></span>
+                <span>&bull;</span>
+                <span>Innovator: <strong><%= solution.submittedBy?.organization || solution.submittedBy?.name %></strong></span>
+                <span>&bull;</span>
+                <span>Submitted: <%= new Date(solution.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+              </div>
+            </div>
+
+            <!-- Technical Description & Architecture -->
+            <div class="problem-section">
+              <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3);">
+                Technical Description & Architecture
+              </h2>
+              <div class="detail-text">
+                <p style="white-space: pre-line;"><%= solution.description %></p>
+              </div>
+
+              <!-- Technical Approach -->
+              <% if (solution.technicalApproach) { %>
+                <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-top: var(--space-6); margin-bottom: var(--space-2);">
+                  Technical Approach & Methodology
+                </h3>
+                <div class="detail-text">
+                  <p style="white-space: pre-line;"><%= solution.technicalApproach %></p>
+                </div>
+              <% } %>
+
+              <!-- Implementation Details -->
+              <% if (solution.implementationDetails) { %>
+                <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-top: var(--space-6); margin-bottom: var(--space-2);">
+                  Pilot Implementation & Deployment Plan
+                </h3>
+                <div class="detail-text">
+                  <p style="white-space: pre-line;"><%= solution.implementationDetails %></p>
+                </div>
+              <% } %>
+
+              <!-- Technology Stack -->
+              <% if (solution.technology && solution.technology.length > 0) { %>
+                <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-top: var(--space-6); margin-bottom: var(--space-2);">
+                  Technologies & Engineering Tools
+                </h3>
+                <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+                  <% solution.technology.forEach(function(tech) { %>
+                    <span class="badge badge-neutral"><%= tech %></span>
+                  <% }); %>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Cost Economics & Community Impact -->
+            <div class="grid grid-cols-2 gap-6">
+              <div class="problem-section">
+                <h2 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-2);">
+                  Estimated Pilot Budget
+                </h2>
+                <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-primary); margin-bottom: var(--space-2);">
+                  &#8377;<%= Number(solution.estimatedCost || 0).toLocaleString('en-IN') %>
+                </div>
+                <p class="text-muted" style="font-size: var(--font-size-xs); margin-bottom: 0;">
+                  Funding requested for component sourcing, prototyping, and lab testing.
+                </p>
+              </div>
+
+              <div class="problem-section">
+                <h2 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-2);">
+                  Projected Community Impact
+                </h2>
+                <p style="font-size: var(--font-size-sm); line-height: var(--line-height-base); margin-bottom: 0; color: var(--color-text);">
+                  <%= solution.impact || 'Delivers proven community benefit by resolving the civic challenge.' %>
+                </p>
+              </div>
+            </div>
+
+            <!-- Team Composition -->
+            <% if (solution.team && solution.team.members && solution.team.members.length > 0) { %>
+              <div class="problem-section">
+                <h2 style="font-size: var(--font-size-md); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3);">
+                  Research Team Roster (<%= solution.team.name %>)
+                </h2>
+                <div class="dash-problem-list">
+                  <% solution.team.members.forEach(function(m) { %>
+                    <div class="dash-problem-card" style="padding: var(--space-3) var(--space-4);">
+                      <div>
+                        <strong><%= m.name %></strong> &mdash; <span class="text-muted" style="font-size: var(--font-size-xs);"><%= m.role || 'Contributor' %></span>
+                      </div>
+                      <span class="text-muted" style="font-size: var(--font-size-xs);"><%= m.organization || 'University Lab' %></span>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+            <% } %>
+
+          </div>
+
+          <!-- Right: Industry Synergy & Collaboration Form -->
+          <aside style="display: flex; flex-direction: column; gap: var(--space-6);">
+            
+            <!-- Synergy Match Analysis -->
+            <div class="card card-body" style="border-top: 3px solid var(--color-primary);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);">
+                <span class="badge badge-primary" style="font-size: 0.6875rem;">Industry Synergy</span>
+                <span style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-primary);">
+                  <%= matchAnalysis.synergyScore %>%
+                </span>
+              </div>
+
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2);">
+                Collaboration Fit
+              </h2>
+              
+              <p style="font-size: var(--font-size-xs); line-height: var(--line-height-relaxed); color: var(--color-text-muted); margin-bottom: var(--space-3);">
+                <%= matchAnalysis.matchReason %>
+              </p>
+
+              <!-- Matching capabilities -->
+              <% if (matchAnalysis.matchedCapabilities && matchAnalysis.matchedCapabilities.length > 0) { %>
+                <div style="margin-bottom: var(--space-3);">
+                  <div style="font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-success); margin-bottom: 4px;">
+                    ✔ Matching Industrial Capabilities:
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                    <% matchAnalysis.matchedCapabilities.forEach(function(c) { %>
+                      <span class="badge badge-success" style="font-size: 0.6875rem;"><%= c %></span>
+                    <% }); %>
+                  </div>
+                </div>
+              <% } %>
+
+              <!-- Complementary capabilities -->
+              <% if (matchAnalysis.complementaryCapabilities && matchAnalysis.complementaryCapabilities.length > 0) { %>
+                <div style="margin-bottom: var(--space-4);">
+                  <div style="font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-warning); margin-bottom: 4px;">
+                    ⚡ Complementary Focus Areas:
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                    <% matchAnalysis.complementaryCapabilities.slice(0, 3).forEach(function(c) { %>
+                      <span class="badge badge-warning" style="font-size: 0.6875rem;"><%= c %></span>
+                    <% }); %>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Collaboration Submission Box -->
+            <div class="card card-body">
+              <h2 style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); margin-bottom: var(--space-1);">
+                Express Collaboration Interest
+              </h2>
+              <p class="text-muted" style="font-size: var(--font-size-xs); margin-bottom: var(--space-4);">
+                Propose implementation support, manufacturing scale, or pilot sponsorship to the university team and governing authority.
+              </p>
+
+              <% if (existingCollaboration) { %>
+                <div style="background-color: var(--color-success-subtle); border: 1px solid rgba(62, 114, 85, 0.3); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-4);">
+                  <span class="badge badge-success" style="margin-bottom: var(--space-2);">Interest Registered (<%= existingCollaboration.status %>)</span>
+                  <p style="font-size: var(--font-size-xs); color: var(--color-success); margin-bottom: var(--space-2);">
+                    You have offered <strong><%= (existingCollaboration.supportType || 'Pilot').replace('_', ' ') %></strong> for this solution.
+                  </p>
+                  <% if (existingCollaboration.message) { %>
+                    <p style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: 0;">
+                      "<%= existingCollaboration.message %>"
+                    </p>
+                  <% } %>
+                </div>
+              <% } %>
+
+              <form action="/industry/solutions/<%= solution._id %>/collaborate" method="POST">
+                
+                <div class="form-group" style="margin-bottom: var(--space-3);">
+                  <label for="supportType" class="form-label">Collaboration Mode</label>
+                  <select id="supportType" name="supportType" class="form-select" required>
+                    <option value="PILOT_IMPLEMENTATION" <%= (existingCollaboration && existingCollaboration.supportType === 'PILOT_IMPLEMENTATION') ? 'selected' : '' %>>Pilot Implementation & Field Testing</option>
+                    <option value="EQUIPMENT_SPONSORSHIP" <%= (existingCollaboration && existingCollaboration.supportType === 'EQUIPMENT_SPONSORSHIP') ? 'selected' : '' %>>Hardware / Equipment Sponsorship</option>
+                    <option value="TECHNICAL_MENTORSHIP" <%= (existingCollaboration && existingCollaboration.supportType === 'TECHNICAL_MENTORSHIP') ? 'selected' : '' %>>Technical Mentorship & Engineering Support</option>
+                    <option value="FIELD_VALIDATION" <%= (existingCollaboration && existingCollaboration.supportType === 'FIELD_VALIDATION') ? 'selected' : '' %>>On-Ground Validation & Telemetry</option>
+                    <option value="COMMERCIALIZATION" <%= (existingCollaboration && existingCollaboration.supportType === 'COMMERCIALIZATION') ? 'selected' : '' %>>Manufacturing Scale & Commercialization</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                  <label for="collabMessage" class="form-label">Partnership Proposal / Capabilities Note</label>
+                  <textarea id="collabMessage" name="message" class="form-textarea" rows="4" placeholder="Detail how your enterprise can support prototype fabrication, testing, deployment, or field technicians..." required><%= existingCollaboration ? existingCollaboration.message : '' %></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                  🤝 <%= existingCollaboration ? 'Update Collaboration Offer' : 'Submit Collaboration Proposal' %>
+                </button>
+
+              </form>
+            </div>
+
+            <!-- Challenge Context Box -->
+            <div class="card card-body">
+              <h3 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2);">
+                Challenge Context
+              </h3>
+              <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); line-height: var(--line-height-relaxed);">
+                <div>Challenge: <strong><%= solution.challenge?.title %></strong></div>
+                <div>Department: <strong><%= solution.challenge?.department %></strong></div>
+                <div>Location: <strong><%= solution.challenge?.location || 'Jharkhand' %></strong></div>
+              </div>
+              <div style="margin-top: var(--space-3);">
+                <a href="/challenges/<%= solution.challenge?._id %>" class="btn btn-outline btn-sm btn-block">View Full Challenge Brief</a>
+              </div>
+            </div>
+
+          </aside>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

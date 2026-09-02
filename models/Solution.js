@@ -39,6 +39,17 @@ const solutionSchema = new mongoose.Schema(
       required: [true, 'Solution description is required'],
       trim: true
     },
+    technicalApproach: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    skills: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
     technology: [
       {
         type: String,
@@ -55,6 +66,17 @@ const solutionSchema = new mongoose.Schema(
       trim: true,
       default: ''
     },
+    implementationDetails: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    attachments: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
 
     // Authority Evaluation Information (kept strictly separate from submitter info)
     evaluation: {
@@ -86,16 +108,28 @@ const solutionSchema = new mongoose.Schema(
         'UNDER_REVIEW',
         'SHORTLISTED',
         'SELECTED',
-        'REJECTED'
+        'ACCEPTED',
+        'REJECTED',
+        'IMPLEMENTATION'
       ],
       default: 'SUBMITTED',
       required: true
     }
   },
   {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+// Virtual aliases for naming flexibility
+solutionSchema.virtual('challengeId').get(function() {
+  return this.challenge;
+});
+solutionSchema.virtual('universityId').get(function() {
+  return this.submittedBy;
+});
 
 const Solution = mongoose.model('Solution', solutionSchema);
 

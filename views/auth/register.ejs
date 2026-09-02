@@ -112,18 +112,6 @@
                   </div>
                 </label>
 
-                <!-- Admin -->
-                <label class="role-option">
-                  <input type="radio" name="role" value="admin" <%= currentRole === 'admin' ? 'checked' : '' %>>
-                  <div class="role-option-box">
-                    <svg class="role-option-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="3"></circle>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    <span class="role-option-title">Admin</span>
-                  </div>
-                </label>
-
               </div>
             </div>
 
@@ -193,39 +181,190 @@
             </div>
 
             <!-- 3. Conditional / Contextual Fields -->
-            <div id="orgFieldContainer" class="form-group" style="<%= currentRole === 'citizen' ? 'display: none;' : '' %>">
-              <label for="regOrg" class="form-label" id="orgLabel">
-                Organization / Institution
-              </label>
-              <input 
-                type="text" 
-                id="regOrg" 
-                name="organization" 
-                class="form-input" 
-                placeholder="e.g. BIT Mesra / Ranchi Municipal Corp / Tech Startup" 
-                value="<%= currentData.organization || '' %>"
-              />
+
+            <!-- Authority Structured Profile Fields -->
+            <div id="authorityFieldsContainer" style="<%= currentRole === 'authority' ? '' : 'display: none;' %>">
+              <div class="form-group">
+                <label for="regSector" class="form-label">
+                  <span>Authority Sector <span class="required-indicator">*</span></span>
+                </label>
+                <select id="regSector" name="authoritySector" class="form-select">
+                  <option value="">-- Select Authority Sector --</option>
+                  <option value="water_sanitation" <%= currentData.authoritySector === 'water_sanitation' ? 'selected' : '' %>>Water & Sanitation</option>
+                  <option value="municipal_corporation" <%= currentData.authoritySector === 'municipal_corporation' ? 'selected' : '' %>>Municipal Corporation</option>
+                  <option value="public_works_infrastructure" <%= currentData.authoritySector === 'public_works_infrastructure' ? 'selected' : '' %>>Public Works & Infrastructure</option>
+                  <option value="public_health" <%= currentData.authoritySector === 'public_health' ? 'selected' : '' %>>Public Health</option>
+                  <option value="agriculture" <%= currentData.authoritySector === 'agriculture' ? 'selected' : '' %>>Agriculture</option>
+                  <option value="energy" <%= currentData.authoritySector === 'energy' ? 'selected' : '' %>>Energy</option>
+                  <option value="waste_management" <%= currentData.authoritySector === 'waste_management' ? 'selected' : '' %>>Waste Management</option>
+                  <option value="education" <%= currentData.authoritySector === 'education' ? 'selected' : '' %>>Education</option>
+                  <option value="digital_governance_it" <%= currentData.authoritySector === 'digital_governance_it' ? 'selected' : '' %>>Digital Governance & IT</option>
+                  <option value="environment_forest" <%= currentData.authoritySector === 'environment_forest' ? 'selected' : '' %>>Environment & Forest</option>
+                  <option value="transport" <%= currentData.authoritySector === 'transport' ? 'selected' : '' %>>Transport</option>
+                  <option value="urban_development" <%= currentData.authoritySector === 'urban_development' ? 'selected' : '' %>>Urban Development</option>
+                  <option value="rural_development" <%= currentData.authoritySector === 'rural_development' ? 'selected' : '' %>>Rural Development</option>
+                  <option value="public_safety" <%= currentData.authoritySector === 'public_safety' ? 'selected' : '' %>>Public Safety</option>
+                  <option value="other" <%= currentData.authoritySector === 'other' ? 'selected' : '' %>>Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="regDept" class="form-label">
+                  <span>Specific Department / Office</span>
+                  <span class="form-label-optional">Official Name</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="regDept" 
+                  name="department" 
+                  class="form-input" 
+                  placeholder="e.g. Municipal Water Supply Department / PWD Road Maintenance Cell" 
+                  value="<%= currentData.department || currentData.organization || '' %>"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="regJurisdiction" class="form-label">
+                  <span>Official Jurisdiction / District</span>
+                  <span class="form-label-optional">Target Area</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="regJurisdiction" 
+                  name="jurisdiction" 
+                  class="form-input" 
+                  placeholder="e.g. Ranchi District, Latehar, Indiranagar Ward 14" 
+                  value="<%= currentData.jurisdiction || currentData.location || '' %>"
+                />
+              </div>
             </div>
 
-            <div id="skillsFieldContainer" class="form-group" style="<%= (currentRole === 'university' || currentRole === 'industry') ? '' : 'display: none;' %>">
-              <label for="regSkills" class="form-label">
-                <span>Technical Skills / Disciplines</span>
-                <span class="form-label-optional">Comma-separated</span>
-              </label>
-              <input 
-                type="text" 
-                id="regSkills" 
-                name="skills" 
-                class="form-input" 
-                placeholder="e.g. IoT, Computer Vision, Civil Engineering, Renewable Energy" 
-                value="<%= currentData.skills || '' %>"
-              />
+            <!-- University Structured Profile Fields -->
+            <div id="universityFieldsContainer" style="<%= currentRole === 'university' ? '' : 'display: none;' %>">
+              <div class="form-group">
+                <label for="regUniOrg" class="form-label">University / Institute / Lab Name</label>
+                <input 
+                  type="text" 
+                  id="regUniOrg" 
+                  name="organization" 
+                  class="form-input" 
+                  placeholder="e.g. BIT Mesra / Environmental Robotics Lab" 
+                  value="<%= currentData.organization || '' %>"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="regUniDomains" class="form-label">
+                  <span>Research & Engineering Domains</span>
+                  <span class="form-label-optional">Comma-separated</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="regUniDomains" 
+                  name="domains" 
+                  class="form-input" 
+                  placeholder="e.g. AI & ML, IoT, Civil Engineering, Water & Sanitation, Renewable Energy" 
+                  value="<%= currentData.domains || '' %>"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="regUniSkills" class="form-label">
+                  <span>Core Technical Skills</span>
+                  <span class="form-label-optional">Comma-separated</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="regUniSkills" 
+                  name="skills" 
+                  class="form-input" 
+                  placeholder="e.g. Computer Vision, Embedded C, Water Treatment, Structural Mechanics" 
+                  value="<%= currentData.skills || '' %>"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="regUniTech" class="form-label">
+                  <span>Technologies & Tools</span>
+                  <span class="form-label-optional">Comma-separated</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="regUniTech" 
+                  name="technologies" 
+                  class="form-input" 
+                  placeholder="e.g. ESP32, Python, LoRaWAN, TensorFlow Lite, CAD" 
+                  value="<%= currentData.technologies || '' %>"
+                />
+              </div>
             </div>
 
-            <div class="form-group">
+            <!-- Industry Structured Profile Fields -->
+            <div id="industryFieldsContainer" style="<%= currentRole === 'industry' ? '' : 'display: none;' %>">
+              <div class="form-group">
+                <label for="regIndOrg" class="form-label">Enterprise / Company Name</label>
+                <input 
+                  type="text" 
+                  id="regIndOrg" 
+                  name="organization" 
+                  class="form-input" 
+                  placeholder="e.g. Smart Systems Automation Pvt Ltd" 
+                  value="<%= currentData.organization || '' %>"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="regIndSector" class="form-label">Industry Sector</label>
+                <select id="regIndSector" name="industrySector" class="form-select">
+                  <option value="">-- Select Industry Sector --</option>
+                  <option value="water_sanitation" <%= currentData.industrySector === 'water_sanitation' ? 'selected' : '' %>>Water, Filtration & Piping</option>
+                  <option value="public_works_infrastructure" <%= currentData.industrySector === 'public_works_infrastructure' ? 'selected' : '' %>>Civil Infrastructure & Construction</option>
+                  <option value="energy" <%= currentData.industrySector === 'energy' ? 'selected' : '' %>>Renewable Energy & Power Systems</option>
+                  <option value="manufacturing" <%= currentData.industrySector === 'manufacturing' ? 'selected' : '' %>>Hardware Manufacturing & Electronics</option>
+                  <option value="public_health" <%= currentData.industrySector === 'public_health' ? 'selected' : '' %>>Biomedical & Healthcare Devices</option>
+                  <option value="waste_management" <%= currentData.industrySector === 'waste_management' ? 'selected' : '' %>>Waste Recycling & Processing</option>
+                  <option value="agriculture" <%= currentData.industrySector === 'agriculture' ? 'selected' : '' %>>Agri-Tech & Cold Chain</option>
+                  <option value="digital_governance_it" <%= currentData.industrySector === 'digital_governance_it' ? 'selected' : '' %>>IT, Telecom & SCADA</option>
+                  <option value="other" <%= currentData.industrySector === 'other' ? 'selected' : '' %>>Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="regIndCap" class="form-label">
+                  <span>Industrial Implementation Capabilities</span>
+                  <span class="form-label-optional">Comma-separated</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="regIndCap" 
+                  name="capabilities" 
+                  class="form-input" 
+                  placeholder="e.g. Pilot Implementation, Hardware Fabrication, Field Validation, Manufacturing Scale" 
+                  value="<%= currentData.capabilities || '' %>"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="regIndTech" class="form-label">
+                  <span>Technologies & Production Capabilities</span>
+                  <span class="form-label-optional">Comma-separated</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="regIndTech" 
+                  name="technologies" 
+                  class="form-input" 
+                  placeholder="e.g. PCB Assembly, CNC Machining, IoT Enclosures, Solar Inverters" 
+                  value="<%= currentData.technologies || '' %>"
+                />
+              </div>
+            </div>
+
+            <!-- Citizen & General Location Field -->
+            <div class="form-group" id="generalLocationContainer">
               <label for="regLocation" class="form-label">
                 <span>Location / District</span>
-                <span class="form-label-optional">Optional</span>
+                <span class="form-label-optional">City / State</span>
               </label>
               <input 
                 type="text" 
@@ -261,34 +400,18 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const roleInputs = document.querySelectorAll('input[name="role"]');
-      const orgContainer = document.getElementById('orgFieldContainer');
-      const orgLabel = document.getElementById('orgLabel');
-      const skillsContainer = document.getElementById('skillsFieldContainer');
+      const authContainer = document.getElementById('authorityFieldsContainer');
+      const uniContainer = document.getElementById('universityFieldsContainer');
+      const indContainer = document.getElementById('industryFieldsContainer');
 
       function updateFields(role) {
-        if (role === 'citizen') {
-          orgContainer.style.display = 'none';
-          skillsContainer.style.display = 'none';
-        } else if (role === 'authority') {
-          orgContainer.style.display = 'flex';
-          orgLabel.textContent = 'Government Department / Municipal Agency';
-          skillsContainer.style.display = 'none';
-        } else if (role === 'university') {
-          orgContainer.style.display = 'flex';
-          orgLabel.textContent = 'University / Research Institute / Lab';
-          skillsContainer.style.display = 'flex';
-        } else if (role === 'industry') {
-          orgContainer.style.display = 'flex';
-          orgLabel.textContent = 'Company / Industry Partner';
-          skillsContainer.style.display = 'flex';
-        } else if (role === 'admin') {
-          orgContainer.style.display = 'flex';
-          orgLabel.textContent = 'Administrative Department';
-          skillsContainer.style.display = 'none';
-        }
+        if (authContainer) authContainer.style.display = (role === 'authority') ? 'block' : 'none';
+        if (uniContainer) uniContainer.style.display = (role === 'university') ? 'block' : 'none';
+        if (indContainer) indContainer.style.display = (role === 'industry') ? 'block' : 'none';
       }
 
       roleInputs.forEach(input => {
+        if (input.checked) updateFields(input.value);
         input.addEventListener('change', (e) => {
           updateFields(e.target.value);
         });

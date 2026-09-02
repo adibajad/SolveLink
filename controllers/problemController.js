@@ -5,6 +5,7 @@ const Challenge = require('../models/Challenge');
 const Solution = require('../models/Solution');
 const aiService = require('../services/aiService');
 const duplicateService = require('../services/duplicateService');
+const matchingService = require('../services/matchingService');
 
 /**
  * Community Problems Discovery Page (/problems)
@@ -398,15 +399,21 @@ const postReportProblem = async (req, res, next) => {
       urgency: cleanUrgency || 'MEDIUM'
     });
 
-    // 2. Run Duplicate Detection
+    // 2. Run Deterministic Problem -> Authority Matching Engine
+    const routingResult = await matchingService.matchAuthorityForProblem(
+      aiAnalysisResult,
+      cleanLocation
+    );
+
+    // 3. Run Duplicate Detection
     const duplicateResult = await duplicateService.findDuplicates({
       title: cleanTitle,
       description: cleanDescription,
-      category: aiAnalysisResult.category,
+      category: aiAnalysisResult.humanCategory || aiAnalysisResult.category,
       location: cleanLocation
     });
 
-    // 3. Persist Problem to Database
+    // 4. Persist Problem to Database
     const similarProblems = duplicateResult.isPotentialDuplicate && duplicateResult.matchedProblemId
       ? [duplicateResult.matchedProblemId]
       : [];
@@ -414,7 +421,7 @@ const postReportProblem = async (req, res, next) => {
     const newProblem = await Problem.create({
       title: cleanTitle,
       description: cleanDescription,
-      category: aiAnalysisResult.category,
+      category: aiAnalysisResult.humanCategory || aiAnalysisResult.category,
       location: cleanLocation,
       locationText: cleanLocation,
       latitude: parsedLat,
@@ -422,22 +429,33 @@ const postReportProblem = async (req, res, next) => {
       images: imagePaths,
       reportedBy: userId,
       supporters: [userId], // Reporter automatically supports their own problem
-      priority: aiAnalysisResult.priorityRecommendation,
-      severity: aiAnalysisResult.severity,
+      priority: aiAnalysisResult.urgency,
+      severity: aiAnalysisResult.urgency,
       status: 'REPORTED',
       affectedPeople: cleanAffected,
       similarProblems,
       sentiment: aiAnalysisResult.sentiment || { label: 'neutral', score: 0.5 },
       aiAnalysis: {
-        category: aiAnalysisResult.category,
-        severity: aiAnalysisResult.severity,
-        priority: aiAnalysisResult.priorityRecommendation,
+        category: aiAnalysisResult.humanCategory || aiAnalysisResult.category,
+        severity: aiAnalysisResult.urgency,
+        priority: aiAnalysisResult.urgency,
         sentiment: aiAnalysisResult.sentiment || { label: 'neutral', score: 0.5, confidence: 0.7 },
         summary: aiAnalysisResult.summary,
-        confidenceScore: aiAnalysisResult.confidenceScore,
+        confidenceScore: aiAnalysisResult.confidence,
         tags: aiAnalysisResult.keywords,
         analyzedAt: aiAnalysisResult.analyzedAt
-      }
+      },
+      aiClassification: {
+        domain: aiAnalysisResult.domain,
+        category: aiAnalysisResult.category,
+        subCategory: aiAnalysisResult.subCategory,
+        urgency: aiAnalysisResult.urgency,
+        confidence: aiAnalysisResult.confidence,
+        classifiedAt: aiAnalysisResult.analyzedAt
+      },
+      assignedAuthority: routingResult.bestAuthority ? routingResult.bestAuthority._id : null,
+      assignmentStatus: routingResult.assignmentStatus,
+      assignmentReason: routingResult.assignmentReason
     });
 
     // If duplicate was found, reciprocally link it to the existing problem

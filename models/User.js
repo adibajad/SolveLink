@@ -42,6 +42,49 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: ''
     },
+    // Authority Structured Profile Fields
+    authoritySector: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: ''
+    },
+    department: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    jurisdiction: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    // Industry Structured Profile Fields
+    industrySector: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: ''
+    },
+    capabilities: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
+    // University & Cross-Stakeholder Domains & Technologies
+    domains: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
+    technologies: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
     isVerified: {
       type: Boolean,
       default: true

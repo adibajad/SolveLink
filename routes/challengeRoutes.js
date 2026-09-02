@@ -15,9 +15,10 @@ router.get('/authority/problems/:id', challengeController.getAuthorityProblemDet
 router.post('/authority/problems/:id/status', challengeController.postUpdateProblemStatus);
 router.post('/authority/problems/:id/link-duplicate', challengeController.postLinkDuplicateProblem);
 
-// Challenge Creation
+// Challenge Creation & Management
 router.get('/authority/create-challenge', challengeController.getCreateChallenge);
 router.post('/authority/create-challenge', challengeController.postCreateChallenge);
+router.get('/authority/challenges', (req, res) => res.redirect('/challenges'));
 
 // Solution Review & Evaluation Rubrics
 router.get('/authority/solutions', challengeController.getAuthoritySolutions);

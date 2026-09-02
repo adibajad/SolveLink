@@ -13,6 +13,8 @@ const authRoutes = require('./routes/authRoutes');
 const problemRoutes = require('./routes/problemRoutes');
 const challengeRoutes = require('./routes/challengeRoutes');
 const solutionRoutes = require('./routes/solutionRoutes');
+const industryRoutes = require('./routes/industryRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -64,11 +66,19 @@ app.use('/', challengeRoutes);
 // University & Solution Innovation Routes
 app.use('/', solutionRoutes);
 
+// Industry Partner Routes
+app.use('/', industryRoutes);
+
+// Platform Administrator Routes (Dedicated Login & Ecosystem Dashboard)
+app.use('/', adminRoutes);
+
 // Protected General Dashboard Dispatcher
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
   const role = req.user?.role || 'citizen';
-  if (role === 'authority' || role === 'admin') return res.redirect('/authority/dashboard');
-  if (role === 'university' || role === 'industry') return res.redirect('/university/dashboard');
+  if (role === 'admin') return res.redirect('/admin/dashboard');
+  if (role === 'authority') return res.redirect('/authority/dashboard');
+  if (role === 'university') return res.redirect('/university/dashboard');
+  if (role === 'industry') return res.redirect('/industry/dashboard');
   return res.redirect('/citizen/dashboard');
 });
 

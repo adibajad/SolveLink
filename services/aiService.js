@@ -4,371 +4,456 @@
  * sentiment analysis, severity estimation, priority recommendation, and keyword extraction.
  * 
  * Rules:
- * - AI assists decisions; it does NOT replace official government verification.
- * - Sentiment analysis is a SUPPORTING signal and does NOT dictate severity on its own.
- * - Browser code never calls AI APIs directly.
- * - Secrets and keys remain strictly server-side without external dependencies.
+ * - AI answers: "WHAT TYPE OF PROBLEM IS THIS?"
+ * - Outputs structured classification contract: { domain, category, subCategory, urgency, confidence }
+ * - Never directly assigns an authority user (that is the matching engine's job).
+ * - Deterministic fallback guarantees 100% uptime with zero external network dependencies.
  */
 
 /**
- * Intelligent civic classification dictionary
+ * Canonical Structured Civic Taxonomy
+ * Maps normalized domain keys to human display names, keywords, subcategories, and departments.
  */
+const CIVIC_SECTORS = [
+  { key: 'water_sanitation', label: 'Water & Sanitation' },
+  { key: 'public_works_infrastructure', label: 'Public Works & Infrastructure' },
+  { key: 'public_health', label: 'Public Health' },
+  { key: 'agriculture', label: 'Agriculture' },
+  { key: 'energy', label: 'Energy' },
+  { key: 'waste_management', label: 'Waste Management' },
+  { key: 'education', label: 'Education' },
+  { key: 'digital_governance_it', label: 'Digital Governance & IT' },
+  { key: 'environment_forest', label: 'Environment & Forest' },
+  { key: 'transport', label: 'Transport' },
+  { key: 'urban_development', label: 'Urban Development' },
+  { key: 'rural_development', label: 'Rural Development' },
+  { key: 'public_safety', label: 'Public Safety' },
+  { key: 'municipal_corporation', label: 'Municipal Corporation' },
+  { key: 'other', label: 'Other' }
+];
+
 const CIVIC_TAXONOMY = {
-  'Water & Sanitation': {
-    keywords: ['water', 'pipe', 'leak', 'drainage', 'sewage', 'borewell', 'arsenic', 'drinking water', 'contamination', 'tap', 'well', 'overflow', 'gutter', 'sanitation'],
-    department: 'Department of Drinking Water & Sanitation / Municipal Jal Board',
+  water_sanitation: {
+    label: 'Water & Sanitation',
+    keywords: [
+      'water', 'pipe', 'pipeline', 'leak', 'leaking', 'leakage', 'drainage', 'sewage',
+      'sewer', 'borewell', 'arsenic', 'drinking water', 'contamination', 'tap', 'well',
+      'overflow', 'gutter', 'sanitation', 'manhole', 'waterlogging', 'jal', 'filtration',
+      'handpump', 'submersible', 'burst pipe', 'dirty water'
+    ],
+    defaultDepartment: 'Department of Drinking Water & Sanitation / Municipal Water Supply Board',
     defaultSeverity: 'HIGH'
   },
-  'Infrastructure': {
-    keywords: ['road', 'pothole', 'bridge', 'pavement', 'culvert', 'flyover', 'street', 'crack', 'asphalt', 'divider', 'traffic light', 'streetlight', 'footpath', 'collapse'],
-    department: 'Public Works Department (PWD) / Urban Local Body',
+  public_works_infrastructure: {
+    label: 'Public Works & Infrastructure',
+    keywords: [
+      'road', 'pothole', 'potholes', 'bridge', 'culvert', 'pavement', 'street',
+      'crack', 'cracks', 'asphalt', 'divider', 'traffic light', 'streetlight',
+      'streetlights', 'footpath', 'collapse', 'sidewalk', 'flyover', 'tarmac',
+      'highway', 'drain slab', 'cave-in', 'sinkhole'
+    ],
+    defaultDepartment: 'Public Works Department (PWD) / Urban Local Body Roads Wing',
     defaultSeverity: 'MEDIUM'
   },
-  'Public Health': {
-    keywords: ['hospital', 'clinic', 'asha', 'medicine', 'phc', 'doctor', 'ambulance', 'disease', 'dengue', 'malaria', 'vaccine', 'health', 'fever', 'medical'],
-    department: 'Department of Health & Family Welfare / District Health Society',
+  public_health: {
+    label: 'Public Health',
+    keywords: [
+      'hospital', 'clinic', 'asha', 'medicine', 'phc', 'doctor', 'ambulance',
+      'disease', 'dengue', 'malaria', 'vaccine', 'health', 'fever', 'medical',
+      'epidemic', 'infection', 'poisoning', 'subcenter', 'health worker', 'pharmacy'
+    ],
+    defaultDepartment: 'Department of Health & Family Welfare / District Health Society',
     defaultSeverity: 'CRITICAL'
   },
-  'Agriculture & Energy': {
-    keywords: ['crop', 'farmer', 'irrigation', 'storage', 'solar', 'electricity', 'power outage', 'transformer', 'grid', 'cold storage', 'agriculture', 'forest produce', 'harvest'],
-    department: 'Department of Agriculture & State Electricity Distribution Company',
+  agriculture: {
+    label: 'Agriculture',
+    keywords: [
+      'crop', 'farmer', 'farmers', 'irrigation', 'canal', 'harvest', 'paddy',
+      'wheat', 'fertilizer', 'soil', 'pesticide', 'farming', 'produce', 'field',
+      'kisan', 'drought', 'mandi', 'cold storage', 'seed', 'agro'
+    ],
+    defaultDepartment: 'Department of Agriculture & Farmers Welfare',
     defaultSeverity: 'MEDIUM'
   },
-  'Waste Management': {
-    keywords: ['garbage', 'waste', 'dump', 'trash', 'plastic', 'landfill', 'litter', 'compost', 'recycling', 'debris', 'solid waste'],
-    department: 'Municipal Solid Waste Management Directorate',
+  energy: {
+    label: 'Energy',
+    keywords: [
+      'electricity', 'power outage', 'power cut', 'blackout', 'transformer',
+      'hanging wire', 'electric pole', 'solar', 'grid', 'voltage', 'short circuit',
+      'current', 'bijli', 'transmission', 'meter', 'loose wire', 'electrocution'
+    ],
+    defaultDepartment: 'State Electricity Distribution Company / Renewable Energy Agency',
+    defaultSeverity: 'HIGH'
+  },
+  waste_management: {
+    label: 'Waste Management',
+    keywords: [
+      'garbage', 'waste', 'dump', 'dumpyard', 'trash', 'plastic', 'landfill',
+      'litter', 'debris', 'solid waste', 'stench', 'uncollected', 'kachra',
+      'compost', 'recycling', 'garbage bin'
+    ],
+    defaultDepartment: 'Municipal Solid Waste Management Directorate',
     defaultSeverity: 'MEDIUM'
   },
-  'Education & Digital': {
-    keywords: ['school', 'classroom', 'digital', 'internet', 'connectivity', 'teacher', 'computer', 'student', 'blackboard', 'library', 'learning'],
-    department: 'Department of School Education & Literacy',
+  education: {
+    label: 'Education',
+    keywords: [
+      'school', 'classroom', 'student', 'students', 'teacher', 'teachers',
+      'blackboard', 'benches', 'library', 'learning', 'college', 'midday meal',
+      'school building', 'toilets in school'
+    ],
+    defaultDepartment: 'Department of School Education & Literacy',
     defaultSeverity: 'LOW'
+  },
+  digital_governance_it: {
+    label: 'Digital Governance & IT',
+    keywords: [
+      'internet', 'connectivity', 'broadband', 'csc', 'portal', 'server',
+      'wifi', 'telecom', 'optical fiber', 'digital', 'network', 'biometric', 'aadhaar'
+    ],
+    defaultDepartment: 'Department of Information Technology & Digital Governance',
+    defaultSeverity: 'LOW'
+  },
+  environment_forest: {
+    label: 'Environment & Forest',
+    keywords: [
+      'forest', 'tree', 'wildlife', 'air pollution', 'smoke', 'river pollution',
+      'mining dust', 'deforestation', 'cutting trees', 'wild animals', 'lake pollution'
+    ],
+    defaultDepartment: 'Department of Forest, Environment & Climate Change',
+    defaultSeverity: 'MEDIUM'
+  },
+  transport: {
+    label: 'Transport',
+    keywords: [
+      'bus', 'transit', 'traffic', 'speed breaker', 'parking', 'transport',
+      'pedestrian crossing', 'auto stand', 'bus stop', 'overcrowded bus'
+    ],
+    defaultDepartment: 'Department of Transport / Regional Transport Authority',
+    defaultSeverity: 'MEDIUM'
+  },
+  urban_development: {
+    label: 'Urban Development',
+    keywords: [
+      'urban', 'encroachment', 'park', 'community center', 'slum',
+      'town planning', 'building violation', 'drainage master plan'
+    ],
+    defaultDepartment: 'Urban Development & Housing Department',
+    defaultSeverity: 'MEDIUM'
+  },
+  rural_development: {
+    label: 'Rural Development',
+    keywords: [
+      'panchayat', 'gram sabha', 'rural road', 'village hall', 'mgnrega',
+      'rural scheme', 'panchayat bhawan'
+    ],
+    defaultDepartment: 'Department of Rural Development',
+    defaultSeverity: 'MEDIUM'
+  },
+  public_safety: {
+    label: 'Public Safety',
+    keywords: [
+      'fire hazard', 'flood', 'building collapse', 'landslide', 'disaster',
+      'gas leak', 'illegal construction danger', 'hazard'
+    ],
+    defaultDepartment: 'Disaster Management & District Civil Administration',
+    defaultSeverity: 'CRITICAL'
   }
 };
 
 /**
  * Civic & Emotional Sentiment Lexicon
- * Maps sentiment polarity and intensity for community civic reports
  */
 const SENTIMENT_LEXICON = {
-  // Strong Negative (-3 to -4)
   'frustrated': -3.5,
   'frustrating': -3.2,
-  'frustration': -3.2,
   'terrible': -3.8,
   'horrible': -3.8,
-  'pathetic': -3.6,
   'worst': -4.0,
   'disaster': -3.5,
   'crisis': -3.4,
   'unbearable': -3.7,
-  'neglected': -3.2,
   'negligence': -3.4,
   'suffering': -3.5,
-  'unusable': -3.0,
-  'chaos': -3.0,
-  'helpless': -3.2,
-  'distress': -3.2,
-  'furious': -3.8,
-  'angry': -3.0,
-
-  // Moderate Negative (-1 to -2.5)
   'damaged': -2.2,
-  'damage': -2.0,
   'broken': -2.0,
   'danger': -2.8,
   'dangerous': -2.8,
   'hazard': -2.6,
   'hazardous': -2.6,
-  'delay': -1.8,
-  'delayed': -1.8,
   'dirty': -2.0,
-  'filthy': -2.6,
-  'poor': -2.0,
-  'bad': -2.2,
-  'fault': -1.8,
-  'failure': -2.2,
-  'leak': -1.5,
-  'leaking': -1.6,
-  'leakage': -1.6,
-  'stench': -2.4,
-  'smell': -1.6,
-  'blocked': -1.8,
-  'blockage': -1.8,
+  'leak': -1.8,
+  'leaking': -1.8,
+  'leakage': -1.8,
+  'pothole': -1.6,
+  'potholes': -1.6,
   'overflow': -1.8,
   'overflowing': -2.0,
   'unsafe': -2.6,
-  'risk': -2.0,
-  'trouble': -2.0,
-  'accident': -2.8,
-  'decay': -2.0,
-  'pothole': -1.6,
-  'potholes': -1.6,
-  'crack': -1.4,
-  'cracked': -1.6,
-  'stagnant': -1.8,
   'waterlogging': -2.0,
-  'waterlogged': -2.0,
-  'complaint': -1.5,
-  'pain': -2.5,
-  'stopped': -1.5,
-
-  // Strong Positive (+3 to +4)
   'excellent': 3.8,
-  'wonderful': 3.6,
-  'fantastic': 3.8,
-  'satisfied': 3.4,
   'appreciated': 3.2,
-  'appreciate': 3.2,
-  'great': 3.0,
-
-  // Moderate Positive (+1 to +2.5)
   'good': 2.0,
-  'functioning': 2.2,
-  'functioning normally': 2.5,
-  'normal': 1.8,
-  'normally': 2.0,
-  'working': 1.8,
-  'clean': 2.2,
-  'safe': 2.4,
-  'improved': 2.2,
   'resolved': 2.6,
   'fixed': 2.4,
-  'prompt': 2.2,
-  'efficient': 2.4,
-  'helpful': 2.0,
-  'smooth': 2.0,
-  'smoothly': 2.0,
-  'fine': 1.6,
-  'well': 1.6,
-  'thanks': 2.0,
-  'thank': 1.8
+  'clean': 2.2,
+  'safe': 2.4
 };
 
-// Modifiers (Negations & Boosters)
-const NEGATIONS = new Set(['not', 'no', 'never', 'hardly', 'barely', 'scarcely', 'without', 'lack', 'none']);
-const BOOSTERS = {
-  'very': 1.5,
-  'extremely': 1.8,
-  'completely': 1.8,
-  'severely': 1.8,
-  'totally': 1.6,
-  'highly': 1.5,
-  'deeply': 1.5,
-  'really': 1.4,
-  'quite': 1.3
-};
+const NEGATIONS = new Set(['not', 'no', 'never', 'hardly', 'barely', 'without', 'lack']);
 
 /**
  * Lightweight local server-side NLP sentiment analyzer
- * @param {string} text - The input problem description or title
- * @returns {Object} { label: 'positive'|'neutral'|'negative'|'unknown', score: Number, confidence: Number }
  */
 const analyzeSentiment = (text = '') => {
   try {
     if (!text || typeof text !== 'string') {
-      return {
-        label: 'neutral',
-        score: 0.5,
-        confidence: 0.5
-      };
+      return { label: 'neutral', score: 0.5, confidence: 0.5 };
     }
 
-    const cleanText = text.toLowerCase().trim();
-    if (!cleanText) {
-      return {
-        label: 'neutral',
-        score: 0.5,
-        confidence: 0.5
-      };
-    }
-
-    // Tokenize into clean words
-    const tokens = cleanText
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter(w => w.length > 0);
-
-    if (tokens.length === 0) {
-      return {
-        label: 'neutral',
-        score: 0.5,
-        confidence: 0.5
-      };
-    }
+    const tokens = text.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w.length > 0);
+    if (tokens.length === 0) return { label: 'neutral', score: 0.5, confidence: 0.5 };
 
     let totalScore = 0;
-    let matchedTermsCount = 0;
+    let matchedCount = 0;
 
-    // Check bigrams first (e.g. 'functioning normally')
-    for (let i = 0; i < tokens.length - 1; i++) {
-      const bigram = `${tokens[i]} ${tokens[i + 1]}`;
-      if (SENTIMENT_LEXICON[bigram] !== undefined) {
-        let val = SENTIMENT_LEXICON[bigram];
-        // Check negation before bigram
-        if (i > 0 && NEGATIONS.has(tokens[i - 1])) {
-          val = -val * 0.8;
-        }
-        totalScore += val;
-        matchedTermsCount += 2;
-      }
-    }
-
-    // Check individual unigram tokens
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
       if (SENTIMENT_LEXICON[token] !== undefined) {
         let val = SENTIMENT_LEXICON[token];
-
-        // Check booster modifier on immediate previous word
-        if (i > 0 && BOOSTERS[tokens[i - 1]]) {
-          val *= BOOSTERS[tokens[i - 1]];
-        }
-
-        // Check negation within 2 previous words
-        const isNegated = (i > 0 && NEGATIONS.has(tokens[i - 1])) || 
-                          (i > 1 && NEGATIONS.has(tokens[i - 2]));
-
-        if (isNegated) {
+        if (i > 0 && NEGATIONS.has(tokens[i - 1])) {
           val = -val * 0.8;
         }
-
         totalScore += val;
-        matchedTermsCount++;
+        matchedCount++;
       }
     }
 
-    // Normalized Score mapping to [0.00, 1.00]
-    // 0.00 = Extremely Negative, 0.50 = Neutral, 1.00 = Extremely Positive
     let normalizedScore = 0.50;
-    if (matchedTermsCount > 0) {
-      // Normalize using standard hyperbolic tangent curve
+    if (matchedCount > 0) {
       const comparative = totalScore / (Math.sqrt(tokens.length) + 1.5);
       normalizedScore = 0.50 + 0.50 * Math.tanh(comparative / 2.5);
-      // Round to 2 decimal places
       normalizedScore = Math.max(0, Math.min(1, Math.round(normalizedScore * 100) / 100));
     }
 
-    // Categorize Label
     let label = 'neutral';
-    if (normalizedScore <= 0.42) {
-      label = 'negative';
-    } else if (normalizedScore >= 0.58) {
-      label = 'positive';
-    } else {
-      label = 'neutral';
-    }
-
-    const confidence = matchedTermsCount > 0 
-      ? Math.min(0.95, 0.70 + (matchedTermsCount * 0.05))
-      : 0.60;
+    if (normalizedScore <= 0.42) label = 'negative';
+    else if (normalizedScore >= 0.58) label = 'positive';
 
     return {
       label,
       score: normalizedScore,
-      confidence
+      confidence: matchedCount > 0 ? Math.min(0.95, 0.70 + (matchedCount * 0.05)) : 0.60
     };
-
   } catch (error) {
-    console.warn('[Sentiment Engine Notice] Graceful fallback invoked:', error.message);
-    return {
-      label: 'unknown',
-      score: 0.5,
-      confidence: 0.4
-    };
+    return { label: 'unknown', score: 0.5, confidence: 0.4 };
   }
 };
 
 /**
- * Analyze a citizen reported problem
- * @param {Object} params
- * @param {string} params.title
- * @param {string} params.description
- * @param {string} params.location
- * @param {string} [params.optionalCategory]
- * @param {string} [params.urgency]
- * @returns {Promise<Object>} AI analysis output
+ * Extract fine-grained category & subCategory within a detected domain
  */
-const analyzeProblem = async ({ title = '', description = '', location = '', optionalCategory = '', urgency = 'MEDIUM' }) => {
+function resolveSubCategory(domainKey, text) {
+  const t = text.toLowerCase();
+
+  switch (domainKey) {
+    case 'water_sanitation':
+      if (t.includes('leak') || t.includes('burst') || t.includes('pipe') || t.includes('pipeline')) {
+        return { category: 'water_leakage', subCategory: 'pipeline_leak' };
+      }
+      if (t.includes('drain') || t.includes('overflow') || t.includes('gutter') || t.includes('waterlogging')) {
+        return { category: 'drainage_overflow', subCategory: 'clogged_drain' };
+      }
+      if (t.includes('arsenic') || t.includes('contaminat') || t.includes('dirty') || t.includes('poison') || t.includes('smell')) {
+        return { category: 'water_contamination', subCategory: 'drinking_water_contamination' };
+      }
+      if (t.includes('sewer') || t.includes('manhole') || t.includes('sewage')) {
+        return { category: 'sewerage_blockage', subCategory: 'manhole_overflow' };
+      }
+      return { category: 'water_supply', subCategory: 'irregular_supply' };
+
+    case 'public_works_infrastructure':
+      if (t.includes('pothole') || t.includes('road') || t.includes('asphalt') || t.includes('tarmac')) {
+        return { category: 'road_damage', subCategory: 'pothole_cluster' };
+      }
+      if (t.includes('bridge') || t.includes('culvert') || t.includes('flyover')) {
+        return { category: 'bridge_culvert', subCategory: 'culvert_collapse' };
+      }
+      if (t.includes('light') || t.includes('lamp') || t.includes('dark')) {
+        return { category: 'street_lighting', subCategory: 'broken_streetlight' };
+      }
+      if (t.includes('footpath') || t.includes('pavement') || t.includes('sidewalk')) {
+        return { category: 'footpath_damage', subCategory: 'broken_pavers' };
+      }
+      return { category: 'public_infrastructure', subCategory: 'structural_defect' };
+
+    case 'public_health':
+      if (t.includes('dengue') || t.includes('malaria') || t.includes('fever') || t.includes('epidemic')) {
+        return { category: 'disease_outbreak', subCategory: 'vector_borne_cluster' };
+      }
+      if (t.includes('hospital') || t.includes('phc') || t.includes('doctor') || t.includes('medicine')) {
+        return { category: 'healthcare_facilities', subCategory: 'phc_amenities' };
+      }
+      return { category: 'public_health_hazard', subCategory: 'community_hygiene' };
+
+    case 'agriculture':
+      if (t.includes('irrigation') || t.includes('canal') || t.includes('pump')) {
+        return { category: 'irrigation_issues', subCategory: 'canal_breach' };
+      }
+      if (t.includes('crop') || t.includes('pest') || t.includes('harvest')) {
+        return { category: 'crop_damage', subCategory: 'crop_loss' };
+      }
+      if (t.includes('storage') || t.includes('cold storage')) {
+        return { category: 'storage_logistics', subCategory: 'cold_storage_lack' };
+      }
+      return { category: 'agricultural_infrastructure', subCategory: 'farm_support' };
+
+    case 'energy':
+      if (t.includes('transformer') || t.includes('outage') || t.includes('blackout')) {
+        return { category: 'power_outage', subCategory: 'transformer_failure' };
+      }
+      if (t.includes('wire') || t.includes('pole') || t.includes('shock') || t.includes('hazard')) {
+        return { category: 'electrical_hazard', subCategory: 'hanging_wire' };
+      }
+      if (t.includes('solar') || t.includes('inverter')) {
+        return { category: 'renewable_energy', subCategory: 'solar_microgrid' };
+      }
+      return { category: 'electricity_supply', subCategory: 'voltage_fluctuation' };
+
+    case 'waste_management':
+      if (t.includes('plastic')) {
+        return { category: 'plastic_waste', subCategory: 'plastic_accumulation' };
+      }
+      return { category: 'garbage_dumping', subCategory: 'uncollected_garbage' };
+
+    case 'education':
+      if (t.includes('computer') || t.includes('internet') || t.includes('digital')) {
+        return { category: 'digital_lab', subCategory: 'lab_malfunction' };
+      }
+      return { category: 'school_infrastructure', subCategory: 'classroom_dilapidation' };
+
+    case 'digital_governance_it':
+      return { category: 'connectivity_loss', subCategory: 'broadband_outage' };
+
+    case 'transport':
+      return { category: 'public_transit', subCategory: 'transit_disruption' };
+
+    default:
+      return { category: 'general_civic', subCategory: 'civic_defect' };
+  }
+}
+
+/**
+ * Main AI Problem Classification Function
+ * Produces structured classification: { domain, category, subCategory, urgency, confidence }
+ * 
+ * @param {Object} params
+ * @param {string} params.title - Citizen problem summary
+ * @param {string} params.description - Citizen detailed description
+ * @param {string} params.location - Location or landmark
+ * @param {string} [params.optionalCategory] - Optional user hint (if any)
+ * @param {string} [params.urgency] - Optional user urgency assessment
+ * @returns {Promise<Object>} Structured classification result
+ */
+const analyzeProblem = async ({
+  title = '',
+  description = '',
+  location = '',
+  optionalCategory = '',
+  urgency = 'MEDIUM'
+}) => {
   const combinedText = `${title} ${description}`.toLowerCase();
 
-  // 1. Determine Category
-  let detectedCategory = optionalCategory || '';
+  // 1. Match Domain using Deterministic Keyword Scoring
+  let bestDomainKey = 'public_works_infrastructure'; // baseline fallback
   let highestMatchCount = 0;
-  let recommendedDept = 'District Municipal Administration';
 
-  for (const [catName, data] of Object.entries(CIVIC_TAXONOMY)) {
-    let matchCount = 0;
+  for (const [key, data] of Object.entries(CIVIC_TAXONOMY)) {
+    let matches = 0;
     for (const kw of data.keywords) {
       if (combinedText.includes(kw)) {
-        matchCount++;
+        matches++;
       }
     }
-    if (matchCount > highestMatchCount) {
-      highestMatchCount = matchCount;
-      detectedCategory = catName;
-      recommendedDept = data.department;
+    if (matches > highestMatchCount) {
+      highestMatchCount = matches;
+      bestDomainKey = key;
     }
   }
 
-  if (!detectedCategory) {
-    detectedCategory = 'Infrastructure';
-    recommendedDept = CIVIC_TAXONOMY['Infrastructure'].department;
+  // If user provided a category hint that matches a known domain, give it weight if ambiguous
+  if (highestMatchCount === 0 && optionalCategory) {
+    const hintNorm = optionalCategory.toLowerCase().replace(/[^\w]/g, '_');
+    if (CIVIC_TAXONOMY[hintNorm]) {
+      bestDomainKey = hintNorm;
+    } else {
+      const match = CIVIC_SECTORS.find(s => s.label.toLowerCase() === optionalCategory.toLowerCase());
+      if (match) bestDomainKey = match.key;
+    }
   }
 
-  // 2. Determine Severity independently based on impact, hazard keywords, and urgency
-  let calculatedSeverity = 'MEDIUM';
-  const criticalKeywords = ['arsenic', 'poison', 'collapse', 'death', 'casualty', 'hazard', 'severe', 'epidemic', 'dengue', 'flood', 'electrocution', 'accident', 'stopped for hundreds', 'stopped for 500'];
-  const highKeywords = ['overflow', 'blocked', 'broken', 'contaminated', 'unsafe', 'school', 'hospital', 'major', 'deep pothole', 'water supply has stopped', 'supply stopped'];
+  const domainData = CIVIC_TAXONOMY[bestDomainKey] || CIVIC_TAXONOMY.public_works_infrastructure;
 
-  if (criticalKeywords.some(kw => combinedText.includes(kw)) || urgency === 'CRITICAL') {
-    calculatedSeverity = 'CRITICAL';
-  } else if (highKeywords.some(kw => combinedText.includes(kw)) || urgency === 'HIGH') {
-    calculatedSeverity = 'HIGH';
+  // 2. Resolve specific category & subCategory
+  const { category, subCategory } = resolveSubCategory(bestDomainKey, combinedText);
+
+  // 3. Determine Urgency & Severity
+  let calculatedUrgency = urgency ? urgency.toUpperCase() : 'MEDIUM';
+  const criticalWords = ['arsenic', 'poison', 'collapse', 'death', 'casualty', 'hazard', 'severe', 'epidemic', 'dengue', 'flood', 'electrocution', 'accident', 'burst'];
+  const highWords = ['overflow', 'blocked', 'broken', 'contaminated', 'unsafe', 'school', 'hospital', 'major', 'deep pothole', 'leaking heavily', 'stopped'];
+
+  if (criticalWords.some(w => combinedText.includes(w)) || urgency === 'CRITICAL') {
+    calculatedUrgency = 'CRITICAL';
+  } else if (highWords.some(w => combinedText.includes(w)) || urgency === 'HIGH') {
+    calculatedUrgency = 'HIGH';
   } else if (urgency === 'LOW') {
-    calculatedSeverity = 'LOW';
+    calculatedUrgency = 'LOW';
   }
 
-  // 3. Priority Recommendation
-  let priorityRecommendation = 'MEDIUM';
-  if (calculatedSeverity === 'CRITICAL' || calculatedSeverity === 'HIGH') {
-    priorityRecommendation = calculatedSeverity;
-  } else if (urgency === 'HIGH') {
-    priorityRecommendation = 'HIGH';
-  }
+  // 4. Calculate Confidence (0.75 - 0.96)
+  let confidence = 0.80;
+  if (highestMatchCount >= 3) confidence = 0.94;
+  else if (highestMatchCount === 2) confidence = 0.89;
+  else if (highestMatchCount === 1) confidence = 0.82;
+  else confidence = 0.75;
 
-  // 4. Run Sentiment Analysis (Supporting signal)
+  // 5. Sentiment Analysis
   const sentimentResult = analyzeSentiment(`${title} ${description}`);
 
-  // 5. Extract Keywords
+  // 6. Keywords Extraction
   const words = combinedText
     .replace(/[^\w\s]/g, '')
     .split(/\s+/)
-    .filter(w => w.length > 3 && !['this', 'that', 'with', 'from', 'have', 'there', 'their', 'problem', 'issue', 'please', 'help', 'area', 'near'].includes(w));
+    .filter(w => w.length > 3 && !['this', 'that', 'with', 'from', 'have', 'there', 'their', 'problem', 'issue', 'please', 'help', 'area', 'near', 'causing'].includes(w));
   const uniqueKeywords = Array.from(new Set(words)).slice(0, 6);
 
-  // 6. Generate Concise Summary
-  const summary = `${detectedCategory} issue reported at ${location || 'local jurisdiction'}: "${title.trim()}". Classified with ${calculatedSeverity.toLowerCase()} severity due to community impact and infrastructure vulnerability. Tone detected as ${sentimentResult.label}.`;
-
-  // 7. Similarity Search Query
-  const similarityQuery = `${detectedCategory} ${location} ${uniqueKeywords.slice(0, 3).join(' ')}`.trim();
+  // 7. Concise Summary
+  const summary = `${domainData.label} issue reported at ${location || 'local jurisdiction'}: "${title.trim()}". Identified as ${category.replace(/_/g, ' ')} (${subCategory.replace(/_/g, ' ')}). Priority: ${calculatedUrgency}.`;
 
   return {
-    category: detectedCategory,
-    severity: calculatedSeverity,
-    urgency: urgency || 'MEDIUM',
-    priorityRecommendation,
+    // Structured Contract for Authority Routing & Database
+    domain: bestDomainKey,
+    category,
+    subCategory,
+    urgency: calculatedUrgency,
+    confidence,
+
+    // Legacy & Display Compatibility Fields
+    humanCategory: domainData.label,
+    departmentRecommendation: domainData.defaultDepartment,
+    severity: calculatedUrgency,
+    priorityRecommendation: calculatedUrgency,
     sentiment: sentimentResult,
     summary,
     keywords: uniqueKeywords,
-    departmentRecommendation: recommendedDept,
-    similarityQuery,
-    confidenceScore: highestMatchCount > 0 ? 0.92 : 0.78,
+    confidenceScore: confidence,
     analyzedAt: new Date()
   };
 };
 
 module.exports = {
   analyzeProblem,
-  analyzeSentiment
+  analyzeSentiment,
+  CIVIC_SECTORS,
+  CIVIC_TAXONOMY
 };

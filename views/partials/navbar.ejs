@@ -51,7 +51,9 @@
           activePath.startsWith('/citizen/my-problems') || 
           activePath.startsWith('/citizen/report-problem') ||
           activePath.startsWith('/authority') ||
-          activePath.startsWith('/university')
+          activePath.startsWith('/university') ||
+          activePath.startsWith('/industry') ||
+          activePath.startsWith('/admin')
         );
       %>
         <a href="/dashboard" class="btn btn-secondary btn-sm <%= isDashActive ? 'active' : '' %>">

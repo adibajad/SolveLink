@@ -132,12 +132,22 @@
                 <% priorityProblems.forEach(function(prob) { %>
                   <a href="/authority/problems/<%= prob._id %>" class="dash-problem-card" style="padding: var(--space-4) var(--space-5);">
                     <div class="dash-problem-info">
-                      <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 2px;">
-                        <span class="badge badge-primary" style="font-size: 0.6875rem;"><%= prob.category %></span>
+                      <div style="display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-bottom: 3px;">
+                        <span class="badge badge-primary" style="font-size: 0.6875rem;">
+                          <%= (prob.aiClassification && prob.aiClassification.domain) ? prob.aiClassification.domain.replace(/_/g, ' ').toUpperCase() : prob.category %>
+                        </span>
+                        <% if (prob.aiClassification && prob.aiClassification.category) { %>
+                          <span class="badge badge-neutral" style="font-size: 0.6875rem;"><%= prob.aiClassification.category.replace(/_/g, ' ') %></span>
+                        <% } %>
                         <% if (prob.priority === 'CRITICAL' || prob.priority === 'HIGH') { %>
                           <span class="badge badge-danger" style="font-size: 0.6875rem;"><%= prob.priority %> Priority</span>
                         <% } %>
-                        <span class="badge badge-warning" style="font-size: 0.6875rem;"><%= prob.status.replace('_', ' ') %></span>
+                        <% if (prob.assignmentStatus) { %>
+                          <span class="badge <%= prob.assignmentStatus === 'assigned' ? 'badge-success' : 'badge-warning' %>" style="font-size: 0.6875rem;">
+                            <%= prob.assignmentStatus.toUpperCase() %>
+                          </span>
+                        <% } %>
+                        <span class="badge badge-warning" style="font-size: 0.6875rem;"><%= prob.status.replace(/_/g, ' ') %></span>
                       </div>
                       <span class="dash-problem-title" style="font-size: var(--font-size-base);"><%= prob.title %></span>
                       <div class="dash-problem-meta" style="margin-top: 2px;">

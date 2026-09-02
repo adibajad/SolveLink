@@ -81,6 +81,14 @@ const postLogin = async (req, res) => {
       email: user.email,
       role: user.role,
       organization: user.organization || '',
+      department: user.department || user.organization || '',
+      authoritySector: user.authoritySector || '',
+      jurisdiction: user.jurisdiction || user.location || '',
+      industrySector: user.industrySector || '',
+      skills: user.skills || [],
+      domains: user.domains || [],
+      technologies: user.technologies || [],
+      capabilities: user.capabilities || [],
       location: user.location || ''
     };
 
@@ -91,12 +99,16 @@ const postLogin = async (req, res) => {
     } else {
       switch (user.role) {
         case 'admin':
+          destination = '/admin/dashboard';
+          break;
         case 'authority':
           destination = '/authority/dashboard';
           break;
         case 'university':
-        case 'industry':
           destination = '/university/dashboard';
+          break;
+        case 'industry':
+          destination = '/industry/dashboard';
           break;
         case 'citizen':
         default:
@@ -157,10 +169,41 @@ const getRegister = (req, res) => {
  * Handle Registration Form Submission -> Create User Directly & Log In
  */
 const postRegister = async (req, res) => {
-  const { name, email, password, role, organization, skills, location } = req.body;
+  const {
+    name,
+    email,
+    password,
+    role,
+    organization,
+    skills,
+    location,
+    authoritySector,
+    department,
+    jurisdiction,
+    industrySector,
+    domains,
+    technologies,
+    capabilities
+  } = req.body;
   const normalizedEmail = email ? email.trim().toLowerCase() : '';
 
-  const validRoles = ['citizen', 'authority', 'university', 'industry', 'admin'];
+  // Explicitly disallow public registration as Admin
+  if (role === 'admin') {
+    return res.status(403).render('auth/register', {
+      activePath: '/auth/register',
+      error: 'Administrator accounts cannot be created through public registration.',
+      formData: {
+        name: name || '',
+        email: normalizedEmail,
+        role: 'citizen',
+        organization: organization || '',
+        skills: skills || '',
+        location: location || ''
+      }
+    });
+  }
+
+  const validRoles = ['citizen', 'authority', 'university', 'industry'];
   const userRole = validRoles.includes(role) ? role : 'citizen';
 
   const formData = {
@@ -169,7 +212,14 @@ const postRegister = async (req, res) => {
     role: userRole,
     organization: organization || '',
     skills: skills || '',
-    location: location || ''
+    location: location || '',
+    authoritySector: authoritySector || '',
+    department: department || '',
+    jurisdiction: jurisdiction || '',
+    industrySector: industrySector || '',
+    domains: domains || '',
+    technologies: technologies || '',
+    capabilities: capabilities || ''
   };
 
   try {
@@ -213,16 +263,22 @@ const postRegister = async (req, res) => {
     // 3. Hash Password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Parse Skills (comma-separated string to clean array)
-    let skillsArray = [];
-    if (skills && typeof skills === 'string') {
-      skillsArray = skills
-        .split(',')
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-    } else if (Array.isArray(skills)) {
-      skillsArray = skills;
-    }
+    // 4. Helper to parse comma-separated or array inputs
+    const parseArray = (input) => {
+      if (!input) return [];
+      if (Array.isArray(input)) return input.map(i => String(i).trim()).filter(i => i.length > 0);
+      return String(input).split(',').map(i => i.trim()).filter(i => i.length > 0);
+    };
+
+    const skillsArray = parseArray(skills);
+    const domainsArray = parseArray(domains);
+    const technologiesArray = parseArray(technologies);
+    const capabilitiesArray = parseArray(capabilities);
+
+    const cleanSector = authoritySector ? authoritySector.trim().toLowerCase() : '';
+    const cleanDept = department ? department.trim() : (organization ? organization.trim() : '');
+    const cleanJurisdiction = jurisdiction ? jurisdiction.trim() : (location ? location.trim() : '');
+    const cleanIndSector = industrySector ? industrySector.trim().toLowerCase() : '';
 
     // 5. Create User Immediately
     const user = await User.create({
@@ -230,9 +286,16 @@ const postRegister = async (req, res) => {
       email: normalizedEmail,
       password: hashedPassword,
       role: userRole,
-      organization: organization ? organization.trim() : '',
+      organization: organization ? organization.trim() : cleanDept,
+      department: cleanDept,
+      authoritySector: cleanSector,
+      jurisdiction: cleanJurisdiction,
+      industrySector: cleanIndSector,
       skills: skillsArray,
-      location: location ? location.trim() : '',
+      domains: domainsArray,
+      technologies: technologiesArray,
+      capabilities: capabilitiesArray,
+      location: location ? location.trim() : cleanJurisdiction,
       isVerified: true
     });
 
@@ -246,19 +309,28 @@ const postRegister = async (req, res) => {
       email: user.email,
       role: user.role,
       organization: user.organization || '',
+      department: user.department || '',
+      authoritySector: user.authoritySector || '',
+      jurisdiction: user.jurisdiction || '',
+      industrySector: user.industrySector || '',
+      skills: user.skills || [],
+      domains: user.domains || [],
+      technologies: user.technologies || [],
+      capabilities: user.capabilities || [],
       location: user.location || ''
     };
 
     // Determine destination
     let regDestination = '/citizen/dashboard';
     switch (user.role) {
-      case 'admin':
       case 'authority':
         regDestination = '/authority/dashboard';
         break;
       case 'university':
-      case 'industry':
         regDestination = '/university/dashboard';
+        break;
+      case 'industry':
+        regDestination = '/industry/dashboard';
         break;
       case 'citizen':
       default:

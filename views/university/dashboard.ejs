@@ -212,15 +212,18 @@
                 <div class="dash-problem-list">
                   <% mySolutions.forEach(function(s) { 
                     let solBadge = 'badge-neutral';
-                    if (s.status === 'SELECTED') solBadge = 'badge-success';
+                    if (s.status === 'SELECTED' || s.status === 'ACCEPTED' || s.status === 'IMPLEMENTATION') solBadge = 'badge-success';
                     else if (s.status === 'SHORTLISTED') solBadge = 'badge-primary';
-                    else if (s.status === 'SUBMITTED') solBadge = 'badge-warning';
+                    else if (s.status === 'SUBMITTED' || s.status === 'UNDER_REVIEW') solBadge = 'badge-warning';
+                    else if (s.status === 'REJECTED') solBadge = 'badge-danger';
                   %>
                     <div class="dash-problem-card">
                       <div class="dash-problem-info">
                         <span class="dash-problem-title"><%= s.title %></span>
                         <div class="dash-problem-meta">
-                          <span>Challenge: <%= s.challenge?.title?.substring(0, 25) %>...</span>
+                          <span>Challenge: <%= s.challenge?.title ? s.challenge.title.substring(0, 28) + '...' : 'Innovation Challenge' %></span>
+                          <span>&bull;</span>
+                          <span>Submitted: <%= new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
                         </div>
                       </div>
                       <span class="badge <%= solBadge %>"><%= s.status.replace('_', ' ') %></span>
@@ -234,6 +237,44 @@
                 </div>
               <% } %>
             </div>
+
+            <!-- Industry Partnership Inquiries on My Solutions -->
+            <% if (typeof industryCollaborations !== 'undefined' && industryCollaborations && industryCollaborations.length > 0) { %>
+              <div>
+                <div class="dash-section-header">
+                  <h2 class="dash-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    Industry Partnership Offers (<%= industryCollaborations.length %>)
+                  </h2>
+                </div>
+
+                <div class="dash-problem-list">
+                  <% industryCollaborations.forEach(function(collab) { %>
+                    <div class="dash-problem-card">
+                      <div class="dash-problem-info">
+                        <span class="dash-problem-title"><%= collab.industry?.organization || collab.industry?.name %></span>
+                        <div class="dash-problem-meta">
+                          <span>Proposal: <strong><%= collab.proposal?.title?.substring(0, 25) %>...</strong></span>
+                          <span>&bull;</span>
+                          <span>Offer: <%= (collab.supportType || 'Pilot').replace('_', ' ') %></span>
+                        </div>
+                        <% if (collab.message) { %>
+                          <p class="text-muted" style="font-size: var(--font-size-xs); margin-top: 4px; margin-bottom: 0;">
+                            "<%= collab.message %>"
+                          </p>
+                        <% } %>
+                      </div>
+                      <span class="badge badge-success">Partner Offer</span>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+            <% } %>
 
           </div>
 

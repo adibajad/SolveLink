@@ -83,32 +83,54 @@
                 />
               </div>
 
-              <!-- Domain & Department -->
+              <!-- Sector, Domain & Department -->
               <div class="form-row">
                 <div class="form-group">
-                  <label for="chCategory" class="form-label">Category</label>
-                  <select id="chCategory" name="category" class="form-select" required>
-                    <option value="Infrastructure" <%= prefill.category === 'Infrastructure' ? 'selected' : '' %>>Infrastructure</option>
-                    <option value="Water & Sanitation" <%= prefill.category === 'Water & Sanitation' ? 'selected' : '' %>>Water & Sanitation</option>
-                    <option value="Public Health" <%= prefill.category === 'Public Health' ? 'selected' : '' %>>Public Health</option>
-                    <option value="Agriculture & Energy" <%= prefill.category === 'Agriculture & Energy' ? 'selected' : '' %>>Agriculture & Energy</option>
-                    <option value="Waste Management" <%= prefill.category === 'Waste Management' ? 'selected' : '' %>>Waste Management</option>
-                    <option value="Education & Digital" <%= prefill.category === 'Education & Digital' ? 'selected' : '' %>>Education & Digital</option>
+                  <label for="chSector" class="form-label">Authority Sector <span class="required-indicator">*</span></label>
+                  <select id="chSector" name="authoritySector" class="form-select" required>
+                    <% if (typeof sectors !== 'undefined' && sectors) { %>
+                      <% sectors.forEach(function(sec) { %>
+                        <option value="<%= sec.key %>" <%= (prefill.authoritySector === sec.key || prefill.authoritySector === sec.label) ? 'selected' : '' %>>
+                          <%= sec.label %>
+                        </option>
+                      <% }); %>
+                    <% } else { %>
+                      <option value="water_sanitation" <%= prefill.authoritySector === 'water_sanitation' ? 'selected' : '' %>>Water & Sanitation</option>
+                      <option value="public_works_infrastructure" <%= prefill.authoritySector === 'public_works_infrastructure' ? 'selected' : '' %>>Public Works & Infrastructure</option>
+                      <option value="energy" <%= prefill.authoritySector === 'energy' ? 'selected' : '' %>>Energy</option>
+                      <option value="agriculture" <%= prefill.authoritySector === 'agriculture' ? 'selected' : '' %>>Agriculture</option>
+                      <option value="public_health" <%= prefill.authoritySector === 'public_health' ? 'selected' : '' %>>Public Health</option>
+                      <option value="waste_management" <%= prefill.authoritySector === 'waste_management' ? 'selected' : '' %>>Waste Management</option>
+                      <option value="municipal_corporation" <%= prefill.authoritySector === 'municipal_corporation' ? 'selected' : '' %>>Municipal Corporation</option>
+                    <% } %>
                   </select>
                 </div>
 
                 <div class="form-group">
-                  <label for="chDept" class="form-label">Department / Agency Name</label>
+                  <label for="chDomain" class="form-label">Challenge Domain Name <span class="required-indicator">*</span></label>
                   <input 
                     type="text" 
-                    id="chDept" 
-                    name="department" 
+                    id="chDomain" 
+                    name="domain" 
                     class="form-input" 
-                    placeholder="e.g. Department of Drinking Water & Sanitation, Govt of Jharkhand" 
-                    value="<%= prefill.department || '' %>" 
+                    placeholder="e.g. Water & Sanitation / Acoustic Leak Sensing" 
+                    value="<%= prefill.domain || prefill.category || '' %>" 
                     required
                   />
                 </div>
+              </div>
+
+              <div class="form-group">
+                <label for="chDept" class="form-label">Department / Responsible Agency <span class="required-indicator">*</span></label>
+                <input 
+                  type="text" 
+                  id="chDept" 
+                  name="department" 
+                  class="form-input" 
+                  placeholder="e.g. Municipal Water Supply Department / Dept of Drinking Water & Sanitation" 
+                  value="<%= prefill.department || '' %>" 
+                  required
+                />
               </div>
 
               <!-- Location & Target Jurisdiction -->
@@ -192,6 +214,22 @@
                   class="form-input" 
                   placeholder="e.g. IoT, Civil Engineering, Material Science, Renewable Energy" 
                   value="<%= prefill.requiredSkills || '' %>"
+                />
+              </div>
+
+              <!-- Required Technologies -->
+              <div class="form-group">
+                <label for="chTech" class="form-label">
+                  <span>Required Technologies & Hardware/Software Stacks</span>
+                  <span class="form-label-optional">Comma-separated</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="chTech" 
+                  name="requiredTechnologies" 
+                  class="form-input" 
+                  placeholder="e.g. ESP32, LoRaWAN, Acoustic Vibration Sensors, Python, TensorFlow Lite" 
+                  value="<%= prefill.requiredTechnologies || '' %>"
                 />
               </div>
 
