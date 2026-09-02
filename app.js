@@ -17,8 +17,8 @@ const solutionRoutes = require('./routes/solutionRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Connect to Database
-connectDB();
+// Connect to Database is handled during server startup (awaited before app.listen)
+app.connectDB = connectDB;
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -28,6 +28,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Trust reverse proxy (Render terminates SSL at edge and proxies to container)
+app.set('trust proxy', 1);
+
 // Session configuration
 app.use(
   session({
@@ -36,7 +39,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: 'auto',
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   })
@@ -63,7 +67,7 @@ app.use('/', solutionRoutes);
 // Protected General Dashboard Dispatcher
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
   const role = req.user?.role || 'citizen';
-  if (role === 'authority') return res.redirect('/authority/dashboard');
+  if (role === 'authority' || role === 'admin') return res.redirect('/authority/dashboard');
   if (role === 'university' || role === 'industry') return res.redirect('/university/dashboard');
   return res.redirect('/citizen/dashboard');
 });
@@ -353,9 +357,16 @@ app.use((err, req, res, next) => {
 
 // Start server if this file is run directly
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`[SolveLink] Server running on http://localhost:${PORT}`);
-  });
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`[SolveLink] Server running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error(`[SolveLink] Failed to start server: ${err.message}`);
+      process.exit(1);
+    });
 }
 
 module.exports = app;

@@ -126,7 +126,7 @@ SolveLink/
 3. Configure environment variables in `.env`:
    ```env
    PORT=3000
-   MONGODB_URI=mongodb://localhost:27017/solvelink
+   MONGODB_URI=mongodb+srv://username:password@cluster0.mongodb.net/solvelink?appName=Cluster0
    SESSION_SECRET=your_secret_key
    ```
 4. Start the server:

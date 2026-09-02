@@ -79,7 +79,10 @@ async function runTests() {
   }
 
   // Connect Mongo
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/solvelink';
+  const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  if (!mongoUri) {
+    throw new Error('MONGODB_URI is required to run tests against MongoDB Atlas');
+  }
   await mongoose.connect(mongoUri);
 
   // Start HTTP Server on ephemeral port
@@ -92,6 +95,7 @@ async function runTests() {
   const citizenEmail = `test_cit_${timestamp}@example.com`;
   const authorityEmail = `test_auth_${timestamp}@gov.in`;
   const universityEmail = `test_uni_${timestamp}@edu.in`;
+  const adminEmail = `test_admin_${timestamp}@solvelink.admin`;
   const initialPassword = 'Password123!';
   const updatedPassword = 'NewSecretPassword456!';
 
@@ -120,7 +124,20 @@ async function runTests() {
     assert(citizenDbUser.isVerified === true, 'User isVerified is true by default');
     assert(citizenDbUser.role === 'citizen', 'User role correctly assigned as citizen');
 
-    // TEST 2: Direct Authority Registration (No OTP)
+    // Duplicate Registration Check (Existing Email)
+    console.log('\n1b. Testing Duplicate Email Registration Rejection...');
+    const dupRegRes = await makeRequest({
+      method: 'POST',
+      path: '/auth/register',
+      body: {
+        name: 'Another User',
+        email: citizenEmail,
+        password: 'Password999!',
+        role: 'citizen'
+      }
+    });
+    assert(dupRegRes.status === 409, 'Duplicate Registration rejected with 409 Conflict');
+    assert(dupRegRes.body.includes('already exists'), 'Response contains "already exists" error message');
     console.log('\n2. Testing Direct Authority Registration...');
     const authRegRes = await makeRequest({
       method: 'POST',
@@ -135,6 +152,15 @@ async function runTests() {
     });
     assert(authRegRes.status === 302, 'Authority Registration returned 302 redirect');
     assert(authRegRes.headers.location === '/authority/dashboard', 'Authority Registration redirected directly to /authority/dashboard');
+    const authCookie = parseCookie(authRegRes.headers);
+    assert(!!authCookie, 'Authority session cookie received');
+
+    const authDashRes = await makeRequest({
+      method: 'GET',
+      path: '/authority/dashboard',
+      headers: { Cookie: authCookie }
+    });
+    assert(authDashRes.status === 200, 'Authenticated Authority can view /authority/dashboard (200 OK)');
 
     // TEST 3: Direct University Registration (No OTP)
     console.log('\n3. Testing Direct University Registration...');
@@ -151,9 +177,56 @@ async function runTests() {
     });
     assert(uniRegRes.status === 302, 'University Registration returned 302 redirect');
     assert(uniRegRes.headers.location === '/university/dashboard', 'University Registration redirected directly to /university/dashboard');
+    const uniCookie = parseCookie(uniRegRes.headers);
+    assert(!!uniCookie, 'University session cookie received');
+
+    const uniDashRes = await makeRequest({
+      method: 'GET',
+      path: '/university/dashboard',
+      headers: { Cookie: uniCookie }
+    });
+    assert(uniDashRes.status === 200, 'Authenticated University Innovator can view /university/dashboard (200 OK)');
+
+    // TEST 3b: Admin User Portal Access
+    console.log('\n3b. Testing Admin User Registration & Dashboard Access...');
+    const adminRegRes = await makeRequest({
+      method: 'POST',
+      path: '/auth/register',
+      body: {
+        name: 'Super Administrator',
+        email: adminEmail,
+        password: initialPassword,
+        role: 'admin',
+        organization: 'SolveLink HQ'
+      }
+    });
+    assert(adminRegRes.status === 302, 'Admin Registration returned 302 redirect');
+    assert(adminRegRes.headers.location === '/authority/dashboard', 'Admin routed to /authority/dashboard');
+    const adminCookie = parseCookie(adminRegRes.headers);
+    assert(!!adminCookie, 'Admin session cookie received');
+
+    const adminDashRes = await makeRequest({
+      method: 'GET',
+      path: '/authority/dashboard',
+      headers: { Cookie: adminCookie }
+    });
+    assert(adminDashRes.status === 200, 'Authenticated Admin can view /authority/dashboard (200 OK)');
 
     // TEST 4: Direct Login (No OTP)
-    console.log('\n4. Testing Direct Login...');
+    console.log('\n4. Testing Login Validation & Credentials...');
+    // 4a. Wrong Password
+    const wrongPassRes = await makeRequest({
+      method: 'POST',
+      path: '/auth/login',
+      body: {
+        email: citizenEmail,
+        password: 'CompletelyWrongPassword123'
+      }
+    });
+    assert(wrongPassRes.status === 401, 'Login with wrong password rejected with 401 Unauthorized');
+    assert(wrongPassRes.body.includes('Invalid email address or password'), 'Response contains invalid credentials error message');
+
+    // 4b. Valid Password
     const loginRes = await makeRequest({
       method: 'POST',
       path: '/auth/login',
@@ -287,13 +360,35 @@ async function runTests() {
     });
     assert(afterLogoutDash.status === 302, 'Dashboard access rejected after logout (302)');
 
+    // TEST 10: Re-login after Logout
+    console.log('\n10. Verifying Re-Login After Logout...');
+    const reLoginRes = await makeRequest({
+      method: 'POST',
+      path: '/auth/login',
+      body: {
+        email: citizenEmail,
+        password: updatedPassword
+      }
+    });
+    assert(reLoginRes.status === 302, 'Re-login returned 302 redirect');
+    assert(reLoginRes.headers.location === '/citizen/dashboard', 'Re-login redirected directly to /citizen/dashboard');
+    const reLoginCookie = parseCookie(reLoginRes.headers);
+    assert(!!reLoginCookie, 'New session cookie received on re-login');
+
+    const reLoginDash = await makeRequest({
+      method: 'GET',
+      path: '/citizen/dashboard',
+      headers: { Cookie: reLoginCookie }
+    });
+    assert(reLoginDash.status === 200, 'Citizen can view dashboard after re-login (200 OK)');
+
     console.log(`\n========================================`);
     console.log(`SUCCESS: All ${passed}/${total} assertions passed!`);
     console.log(`========================================\n`);
 
   } finally {
     // Clean up test users
-    await User.deleteMany({ email: { $in: [citizenEmail, authorityEmail, universityEmail] } });
+    await User.deleteMany({ email: { $in: [citizenEmail, authorityEmail, universityEmail, adminEmail] } });
     if (server) server.close();
     await mongoose.disconnect();
   }

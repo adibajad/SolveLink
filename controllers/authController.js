@@ -72,9 +72,11 @@ const postLogin = async (req, res) => {
     }
 
     // 4. Establish Session
-    req.session.userId = user._id;
+    const userIdStr = user._id.toString();
+    req.session.userId = userIdStr;
     req.session.user = {
-      id: user._id,
+      id: userIdStr,
+      _id: userIdStr,
       name: user.name,
       email: user.email,
       role: user.role,
@@ -82,21 +84,43 @@ const postLogin = async (req, res) => {
       location: user.location || ''
     };
 
-    // 5. Redirect based on role or explicit redirect parameter
+    // Determine destination
+    let destination = '/citizen/dashboard';
     if (redirect && redirect.startsWith('/') && !redirect.startsWith('/auth')) {
-      return res.redirect(redirect);
+      destination = redirect;
+    } else {
+      switch (user.role) {
+        case 'admin':
+        case 'authority':
+          destination = '/authority/dashboard';
+          break;
+        case 'university':
+        case 'industry':
+          destination = '/university/dashboard';
+          break;
+        case 'citizen':
+        default:
+          destination = '/citizen/dashboard';
+          break;
+      }
     }
 
-    switch (user.role) {
-      case 'authority':
-        return res.redirect('/authority/dashboard');
-      case 'university':
-      case 'industry':
-        return res.redirect('/university/dashboard');
-      case 'citizen':
-      default:
-        return res.redirect('/citizen/dashboard');
-    }
+    // Explicitly persist session before redirecting so cookie and store are synchronized
+    return req.session.save((err) => {
+      if (err) {
+        console.error('[Session Error - Login]', err);
+        return res.status(500).render('auth/login', {
+          activePath: '/auth/login',
+          error: 'Failed to establish your session. Please try again.',
+          success: null,
+          redirect: redirect || '',
+          email: normalizedEmail
+        });
+      }
+
+      console.log(`[Auth] Login successful: role=${user.role}, destination=${destination}`);
+      return res.redirect(destination);
+    });
 
   } catch (error) {
     console.error('[Auth Error - Login]', error);
@@ -213,9 +237,11 @@ const postRegister = async (req, res) => {
     });
 
     // 6. Establish Active Session
-    req.session.userId = user._id;
+    const regUserIdStr = user._id.toString();
+    req.session.userId = regUserIdStr;
     req.session.user = {
-      id: user._id,
+      id: regUserIdStr,
+      _id: regUserIdStr,
       name: user.name,
       email: user.email,
       role: user.role,
@@ -223,20 +249,47 @@ const postRegister = async (req, res) => {
       location: user.location || ''
     };
 
-    // 7. Redirect to Role Dashboard
+    // Determine destination
+    let regDestination = '/citizen/dashboard';
     switch (user.role) {
+      case 'admin':
       case 'authority':
-        return res.redirect('/authority/dashboard');
+        regDestination = '/authority/dashboard';
+        break;
       case 'university':
       case 'industry':
-        return res.redirect('/university/dashboard');
+        regDestination = '/university/dashboard';
+        break;
       case 'citizen':
       default:
-        return res.redirect('/citizen/dashboard');
+        regDestination = '/citizen/dashboard';
+        break;
     }
+
+    // Explicitly persist session before redirecting so cookie and store are synchronized
+    return req.session.save((err) => {
+      if (err) {
+        console.error('[Session Error - Register]', err);
+        return res.status(500).render('auth/register', {
+          activePath: '/auth/register',
+          error: 'Account created, but session initialization failed. Please sign in.',
+          formData
+        });
+      }
+
+      console.log(`[Auth] Registration successful: role=${user.role}, destination=${regDestination}`);
+      return res.redirect(regDestination);
+    });
 
   } catch (error) {
     console.error('[Auth Error - Register]', error);
+    if (error.code === 11000) {
+      return res.status(409).render('auth/register', {
+        activePath: '/auth/register',
+        error: 'An account with this email address already exists. Please sign in instead.',
+        formData
+      });
+    }
     return res.status(500).render('auth/register', {
       activePath: '/auth/register',
       error: 'Registration failed due to a server error. Please try again.',

@@ -4,8 +4,13 @@ const mongoose = require('mongoose');
 
 const checkDb = async () => {
   try {
-    const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/solvelink';
-    await mongoose.connect(uri);
+    const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    if (!uri) {
+      console.error('[Inspect DB] Error: MONGODB_URI is not defined in environment variables.');
+      process.exit(1);
+    }
+    const conn = await mongoose.connect(uri);
+    console.log(`[Inspect DB] Connected to: host=${conn.connection.host}, database=${conn.connection.name}`);
     
     const User = require('../models/User');
     const Problem = require('../models/Problem');

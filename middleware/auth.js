@@ -41,9 +41,9 @@ const ensureGuest = (req, res, next) => {
   if (req.session && req.session.user) {
     const role = req.session.user.role || 'citizen';
     if (role === 'citizen') return res.redirect('/citizen/dashboard');
-    if (role === 'authority') return res.redirect('/authority/dashboard');
+    if (role === 'authority' || role === 'admin') return res.redirect('/authority/dashboard');
     if (role === 'university' || role === 'industry') return res.redirect('/university/dashboard');
-    return res.redirect('/dashboard');
+    return res.redirect('/citizen/dashboard');
   }
   next();
 };

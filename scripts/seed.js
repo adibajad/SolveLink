@@ -16,11 +16,15 @@ const Challenge = require('../models/Challenge');
 const Solution = require('../models/Solution');
 
 async function seedDatabase() {
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/solvelink';
-  console.log(`[Seed Script] Connecting to MongoDB: ${uri}...`);
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  if (!uri) {
+    console.error('[Seed Script] Error: MONGODB_URI is not defined in environment variables.');
+    process.exit(1);
+  }
+  console.log('[Seed Script] Connecting to MongoDB...');
 
-  await mongoose.connect(uri);
-  console.log('  ✔ Connected to database.\n');
+  const conn = await mongoose.connect(uri);
+  console.log(`  ✔ Connected to database (${conn.connection.host} / ${conn.connection.name}).\n`);
 
   try {
     console.log('--- Cleaning previous demo records ---');
