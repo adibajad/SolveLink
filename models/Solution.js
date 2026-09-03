@@ -13,6 +13,27 @@ const solutionSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'Submitter is required']
     },
+    // Explicit University / Institutional Linkage
+    university: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true
+    },
+    universityId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true
+    },
+    institute: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    organization: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     team: {
       name: {
         type: String,
@@ -127,8 +148,22 @@ const solutionSchema = new mongoose.Schema(
 solutionSchema.virtual('challengeId').get(function() {
   return this.challenge;
 });
-solutionSchema.virtual('universityId').get(function() {
-  return this.submittedBy;
+
+// Pre-save hook ensuring university, universityId, and organization/institute are always populated
+solutionSchema.pre('save', function(next) {
+  if (!this.university && this.submittedBy) {
+    this.university = this.submittedBy;
+  }
+  if (!this.universityId && this.submittedBy) {
+    this.universityId = this.submittedBy;
+  }
+  if (!this.organization && this.team && this.team.members && this.team.members[0] && this.team.members[0].organization) {
+    this.organization = this.team.members[0].organization;
+  }
+  if (!this.institute && this.organization) {
+    this.institute = this.organization;
+  }
+  next();
 });
 
 const Solution = mongoose.model('Solution', solutionSchema);

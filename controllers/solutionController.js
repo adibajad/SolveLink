@@ -23,9 +23,30 @@ const getUniversityDashboard = async (req, res, next) => {
 
     const rankedChallenges = matchingService.rankChallengesForUser(rawChallenges, currentUser);
 
-    // 2. Fetch User's Submitted Solutions
-    const mySolutions = await Solution.find({ submittedBy: userId })
-      .populate('challenge', 'title category status deadline department')
+    // 2. Fetch User's & University's Submitted Solutions
+    // Matches proposals belonging to authenticated university by:
+    // - Submitter ID matching authenticated user ID
+    // - Explicit university / institute reference matching user ID
+    // - Institutional organization match if logged in as university
+    const userOrg = (currentUser.organization || currentUser.department || '').trim();
+    const queryConditions = [
+      { submittedBy: userId },
+      { university: userId },
+      { universityId: userId }
+    ];
+
+    if (userOrg && currentUser.role === 'university') {
+      const escapedOrg = userOrg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const orgRegex = new RegExp('^' + escapedOrg, 'i');
+      queryConditions.push({ organization: orgRegex });
+      queryConditions.push({ institute: orgRegex });
+      queryConditions.push({ 'team.members.organization': orgRegex });
+    }
+
+    const mySolutions = await Solution.find({ $or: queryConditions })
+      .populate('challenge', 'title category status deadline department location')
+      .populate('submittedBy', 'name email organization role')
+      .populate('university', 'name email organization role')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -143,10 +164,14 @@ const getUniversityChallengeDetail = async (req, res, next) => {
     // Calculate detailed match analysis
     const matchAnalysis = matchingService.calculateMatch(challenge, currentUser);
 
-    // Check if user already submitted a solution
+    // Check if user or university already submitted a solution
     const existingSubmission = await Solution.findOne({
       challenge: challenge._id,
-      submittedBy: userId
+      $or: [
+        { submittedBy: userId },
+        { university: userId },
+        { universityId: userId }
+      ]
     }).lean();
 
     res.render('university/challenge-detail', {
@@ -276,7 +301,11 @@ const postSubmitSolution = async (req, res, next) => {
     // 3. Prevent duplicate proposals by the same university team
     const existingSubmission = await Solution.findOne({
       challenge: challenge._id,
-      submittedBy: userId
+      $or: [
+        { submittedBy: userId },
+        { university: userId },
+        { universityId: userId }
+      ]
     }).lean();
 
     if (existingSubmission) {
@@ -315,6 +344,7 @@ const postSubmitSolution = async (req, res, next) => {
     const skillList = parseList(skills);
 
     // 6. Assemble Team Roster
+    const instituteOrg = req.user.organization || req.user.department || '';
     const teamMembers = [];
     if (memberNames && Array.isArray(memberNames)) {
       memberNames.forEach((name, i) => {
@@ -323,7 +353,7 @@ const postSubmitSolution = async (req, res, next) => {
             name: name.trim(),
             email: memberEmails?.[i]?.trim() || '',
             role: memberRoles?.[i]?.trim() || 'Contributor',
-            organization: req.user.organization || 'University/Lab'
+            organization: instituteOrg || 'University/Lab'
           });
         }
       });
@@ -334,7 +364,7 @@ const postSubmitSolution = async (req, res, next) => {
         name: req.user.name,
         email: req.user.email,
         role: 'Team Lead / Principal Investigator',
-        organization: req.user.organization || 'University'
+        organization: instituteOrg || 'University'
       });
     }
 
@@ -346,10 +376,14 @@ const postSubmitSolution = async (req, res, next) => {
       });
     }
 
-    // 8. Persist Solution in MongoDB
+    // 8. Persist Solution in MongoDB with explicit university and institution linkage
     const newSolution = await Solution.create({
       challenge: challenge._id,
       submittedBy: userId,
+      university: userId,
+      universityId: userId,
+      organization: instituteOrg,
+      institute: instituteOrg,
       team: {
         name: teamName && teamName.trim() ? teamName.trim() : `${req.user.name}'s Project Team`,
         members: teamMembers

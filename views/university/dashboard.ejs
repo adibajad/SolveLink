@@ -212,21 +212,27 @@
                 <div class="dash-problem-list">
                   <% mySolutions.forEach(function(s) { 
                     let solBadge = 'badge-neutral';
-                    if (s.status === 'SELECTED' || s.status === 'ACCEPTED' || s.status === 'IMPLEMENTATION') solBadge = 'badge-success';
-                    else if (s.status === 'SHORTLISTED') solBadge = 'badge-primary';
-                    else if (s.status === 'SUBMITTED' || s.status === 'UNDER_REVIEW') solBadge = 'badge-warning';
-                    else if (s.status === 'REJECTED') solBadge = 'badge-danger';
+                    const st = (s.status || 'SUBMITTED').toUpperCase();
+                    if (st === 'SELECTED' || st === 'ACCEPTED' || st === 'IMPLEMENTATION') solBadge = 'badge-success';
+                    else if (st === 'SHORTLISTED') solBadge = 'badge-primary';
+                    else if (st === 'SUBMITTED' || st === 'UNDER_REVIEW') solBadge = 'badge-warning';
+                    else if (st === 'REJECTED') solBadge = 'badge-danger';
+
+                    const challengeTitle = s.challenge && s.challenge.title 
+                      ? (s.challenge.title.length > 55 ? s.challenge.title.substring(0, 52) + '...' : s.challenge.title)
+                      : 'Innovation Challenge';
+                    const challengeLink = s.challenge && s.challenge._id ? `/university/challenges/${s.challenge._id}` : '/university/challenges';
                   %>
                     <div class="dash-problem-card">
                       <div class="dash-problem-info">
                         <span class="dash-problem-title"><%= s.title %></span>
                         <div class="dash-problem-meta">
-                          <span>Challenge: <%= s.challenge?.title ? s.challenge.title.substring(0, 28) + '...' : 'Innovation Challenge' %></span>
+                          <span>Target: <a href="<%= challengeLink %>" style="color: inherit; text-decoration: underline;"><%= challengeTitle %></a></span>
                           <span>&bull;</span>
-                          <span>Submitted: <%= new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
+                          <span>Submitted: <%= new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
                         </div>
                       </div>
-                      <span class="badge <%= solBadge %>"><%= s.status.replace('_', ' ') %></span>
+                      <span class="badge <%= solBadge %>"><%= (s.status || 'SUBMITTED').replace(/_/g, ' ') %></span>
                     </div>
                   <% }); %>
                 </div>
