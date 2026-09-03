@@ -6,20 +6,14 @@ const problemController = require('../controllers/problemController');
 const { ensureAuthenticated } = require('../middleware/auth');
 
 // Multer Storage & Validation
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../public/uploads'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, 'evidence-' + uniqueSuffix + ext);
-  }
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  if (allowedMimes.includes(file.mimetype)) {
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+
+  if (allowedMimes.includes(file.mimetype) && (allowedExts.includes(ext) || !ext)) {
     cb(null, true);
   } else {
     cb(new Error('Only JPEG, PNG, and WebP image files are allowed.'));

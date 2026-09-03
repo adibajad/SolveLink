@@ -15,6 +15,7 @@ const challengeRoutes = require('./routes/challengeRoutes');
 const solutionRoutes = require('./routes/solutionRoutes');
 const industryRoutes = require('./routes/industryRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const storageService = require('./services/storageService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,11 +52,35 @@ app.use(
 // Global user locals & path middleware for EJS
 app.use(setUserLocals);
 
-// Static files middleware
+// Durable Uploads Serving Endpoint (Local Disk Cache + Persistent MongoDB GridFS)
+app.get(
+  ['/uploads/:filename', '/authority/problems/uploads/:filename', '/problems/uploads/:filename', '/citizen/uploads/:filename'],
+  async (req, res, next) => {
+    try {
+      const filename = req.params.filename;
+      const safeFilename = path.basename(filename);
+
+      // Check if file is available in local disk cache or MongoDB GridFS
+      const fileData = await storageService.getFileStream(safeFilename);
+      if (fileData && fileData.stream) {
+        if (fileData.mimetype) {
+          res.setHeader('Content-Type', fileData.mimetype);
+        }
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day browser cache
+        return fileData.stream.pipe(res);
+      }
+
+      // Not found on disk or GridFS
+      return res.status(404).send('Evidence image not found.');
+    } catch (err) {
+      console.error('[Upload Serving Error]', err);
+      return res.status(500).send('Error retrieving evidence image.');
+    }
+  }
+);
+
+// Static files middleware (CSS, JS, static category imagery)
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-// Resilient fallback for any nested relative image requests from sub-routes
-app.use(['/authority/problems/uploads', '/problems/uploads', '/citizen/uploads', '/authority/uploads'], express.static(path.join(__dirname, 'public/uploads')));
 
 // Auth Routes
 app.use('/auth', authRoutes);

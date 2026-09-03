@@ -6,6 +6,7 @@ const Solution = require('../models/Solution');
 const aiService = require('../services/aiService');
 const duplicateService = require('../services/duplicateService');
 const matchingService = require('../services/matchingService');
+const storageService = require('../services/storageService');
 
 /**
  * Community Problems Discovery Page (/problems)
@@ -384,11 +385,16 @@ const postReportProblem = async (req, res, next) => {
       });
     }
 
-    // Process uploaded images
+    // Process and persist uploaded images to durable storage
     const imagePaths = [];
-    req.files.forEach(file => {
-      imagePaths.push(`/uploads/${file.filename}`);
-    });
+    for (const file of req.files) {
+      const storedPath = await storageService.saveFile({
+        buffer: file.buffer,
+        originalname: file.originalname,
+        mimetype: file.mimetype
+      });
+      imagePaths.push(storedPath);
+    }
 
     // 1. Run AI Problem Analysis
     const aiAnalysisResult = await aiService.analyzeProblem({
@@ -801,19 +807,15 @@ const deleteProblem = async (req, res, next) => {
       return res.status(403).json({ success: false, error: 'You are not authorized to delete this report.' });
     }
 
-    // 3. Authorized Deletion: Clean up associated image files from disk
+    // 3. Authorized Deletion: Clean up associated image files from durable storage
     if (problem.images && Array.isArray(problem.images)) {
-      problem.images.forEach(imgUrl => {
+      for (const imgUrl of problem.images) {
         try {
-          const filename = path.basename(imgUrl);
-          const filePath = path.join(__dirname, '../public/uploads', filename);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
+          await storageService.deleteFile(imgUrl);
         } catch (fileErr) {
           console.warn('[File Deletion Warning]', fileErr.message);
         }
-      });
+      }
     }
 
     // 4. Remove References from Similar Problems
