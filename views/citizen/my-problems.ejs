@@ -102,20 +102,47 @@
               else if (prob.status === 'CHALLENGE_CREATED') badgeClass = 'badge-primary';
               else if (prob.status === 'UNDER_VERIFICATION') badgeClass = 'badge-warning';
               else if (prob.status === 'REJECTED') badgeClass = 'badge-danger';
+              const rawThumb = (prob.images && prob.images.length > 0) ? prob.images[0] : null;
+              let cleanThumb = rawThumb;
+              if (cleanThumb && typeof cleanThumb === 'string') {
+                cleanThumb = (cleanThumb.startsWith('http') || cleanThumb.startsWith('/')) ? cleanThumb : '/' + cleanThumb;
+              }
             %>
-              <a href="/problems/<%= prob._id %>" class="dash-problem-card" style="padding: var(--space-5);">
-                <div class="dash-problem-info">
-                  <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 2px;">
-                    <span class="badge badge-neutral" style="font-size: 0.6875rem;"><%= prob.category %></span>
-                    <span class="badge <%= badgeClass %>"><%= prob.status.replace('_', ' ') %></span>
-                  </div>
-                  <span class="dash-problem-title" style="font-size: var(--font-size-base);"><%= prob.title %></span>
-                  <div class="dash-problem-meta" style="margin-top: 4px;">
-                    <span>📍 <%= prob.location %></span>
-                    <span>&bull;</span>
-                    <span><%= prob.supporters ? prob.supporters.length : 1 %> Community Supporters</span>
-                    <span>&bull;</span>
-                    <span>Reported <%= new Date(prob.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+              <a href="/problems/<%= prob._id %>" class="dash-problem-card" style="padding: var(--space-4) var(--space-5); gap: var(--space-4);">
+                <div style="display: flex; align-items: center; gap: var(--space-4); min-width: 0; flex: 1;">
+                  <% if (cleanThumb) { %>
+                    <div style="width: 60px; height: 60px; border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; border: 1px solid var(--color-border); background: var(--color-surface-soft);">
+                      <img 
+                        src="<%= cleanThumb %>" 
+                        alt="<%= prob.title %> photo" 
+                        loading="lazy" 
+                        style="width: 100%; height: 100%; object-fit: cover;"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                      />
+                      <div style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--color-text-muted);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <div style="width: 60px; height: 60px; border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; border: 1px dashed var(--color-border); background: var(--color-surface-soft); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--color-text-muted); font-size: 0.625rem; text-align: center; gap: 2px;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.6;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                      <span>No photo</span>
+                    </div>
+                  <% } %>
+
+                  <div class="dash-problem-info" style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 2px;">
+                      <span class="badge badge-neutral" style="font-size: 0.6875rem;"><%= prob.category %></span>
+                      <span class="badge <%= badgeClass %>"><%= prob.status.replace('_', ' ') %></span>
+                    </div>
+                    <span class="dash-problem-title" style="font-size: var(--font-size-base);"><%= prob.title %></span>
+                    <div class="dash-problem-meta" style="margin-top: 4px;">
+                      <span>📍 <%= prob.location %></span>
+                      <span>&bull;</span>
+                      <span><%= prob.supporters ? prob.supporters.length : 1 %> Community Supporters</span>
+                      <span>&bull;</span>
+                      <span>Reported <%= new Date(prob.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                    </div>
                   </div>
                 </div>
                 

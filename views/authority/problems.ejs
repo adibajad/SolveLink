@@ -165,42 +165,69 @@
                 assignBadge = 'badge-primary';
                 assignText = 'Verified';
               }
-            %>
-              <a href="/authority/problems/<%= prob._id %>" class="dash-problem-card" style="padding: var(--space-5);">
-                <div class="dash-problem-info">
-                  <div style="display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-bottom: 4px;">
-                    <span class="badge badge-primary" style="font-size: 0.6875rem;">
-                      <%= (prob.aiClassification && prob.aiClassification.domain) ? prob.aiClassification.domain.replace(/_/g, ' ').toUpperCase() : prob.category %>
-                    </span>
-                    <% if (prob.aiClassification && prob.aiClassification.category) { %>
-                      <span class="badge badge-neutral" style="font-size: 0.6875rem;">
-                        <%= prob.aiClassification.category.replace(/_/g, ' ') %>
-                      </span>
-                    <% } %>
-                    <span class="badge <%= prioBadge %>" style="font-size: 0.6875rem;"><%= urgencyVal %> Urgency</span>
-                    <span class="badge <%= assignBadge %>" style="font-size: 0.6875rem;"><%= assignText %></span>
-                    <span class="badge <%= badgeClass %>" style="font-size: 0.6875rem;"><%= prob.status.replace(/_/g, ' ') %></span>
-                    <% if (prob.aiClassification && prob.aiClassification.confidence) { %>
-                      <span style="font-size: 0.6875rem; color: var(--color-text-muted);">
-                        ⚡ <%= Math.round(prob.aiClassification.confidence * 100) %>% AI Confidence
-                      </span>
-                    <% } %>
-                  </div>
+                const rawThumb = (prob.images && prob.images.length > 0) ? prob.images[0] : null;
+                let cleanThumb = rawThumb;
+                if (cleanThumb && typeof cleanThumb === 'string') {
+                  cleanThumb = (cleanThumb.startsWith('http') || cleanThumb.startsWith('/')) ? cleanThumb : '/' + cleanThumb;
+                }
+              %>
+              <a href="/authority/problems/<%= prob._id %>" class="dash-problem-card" style="padding: var(--space-4) var(--space-5); gap: var(--space-4);">
+                <div style="display: flex; align-items: center; gap: var(--space-4); min-width: 0; flex: 1;">
+                  <% if (cleanThumb) { %>
+                    <div style="width: 64px; height: 64px; border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; border: 1px solid var(--color-border); background: var(--color-surface-soft);">
+                      <img 
+                        src="<%= cleanThumb %>" 
+                        alt="<%= prob.title %> evidence photo" 
+                        loading="lazy" 
+                        style="width: 100%; height: 100%; object-fit: cover;"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                      />
+                      <div style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--color-text-muted);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <div style="width: 64px; height: 64px; border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; border: 1px dashed var(--color-border); background: var(--color-surface-soft); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--color-text-muted); font-size: 0.625rem; text-align: center; gap: 2px;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.6;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                      <span>No photo</span>
+                    </div>
+                  <% } %>
                   
-                  <span class="dash-problem-title" style="font-size: var(--font-size-base);"><%= prob.title %></span>
-                  
-                  <div class="dash-problem-meta" style="margin-top: 4px;">
-                    <span>📍 <%= prob.location %></span>
-                    <span>&bull;</span>
-                    <span>👥 <%= prob.supporters ? prob.supporters.length : 1 %> Supporters</span>
-                    <span>&bull;</span>
-                    <span>Reported by <%= prob.reportedBy ? prob.reportedBy.name : 'Citizen' %></span>
-                    <span>&bull;</span>
-                    <span>Submitted <%= new Date(prob.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
-                    <% if (prob.assignmentReason) { %>
+                  <div class="dash-problem-info" style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-bottom: 4px;">
+                      <span class="badge badge-primary" style="font-size: 0.6875rem;">
+                        <%= (prob.aiClassification && prob.aiClassification.domain) ? prob.aiClassification.domain.replace(/_/g, ' ').toUpperCase() : prob.category %>
+                      </span>
+                      <% if (prob.aiClassification && prob.aiClassification.category) { %>
+                        <span class="badge badge-neutral" style="font-size: 0.6875rem;">
+                          <%= prob.aiClassification.category.replace(/_/g, ' ') %>
+                        </span>
+                      <% } %>
+                      <span class="badge <%= prioBadge %>" style="font-size: 0.6875rem;"><%= urgencyVal %> Urgency</span>
+                      <span class="badge <%= assignBadge %>" style="font-size: 0.6875rem;"><%= assignText %></span>
+                      <span class="badge <%= badgeClass %>" style="font-size: 0.6875rem;"><%= prob.status.replace(/_/g, ' ') %></span>
+                      <% if (prob.aiClassification && prob.aiClassification.confidence) { %>
+                        <span style="font-size: 0.6875rem; color: var(--color-text-muted);">
+                          ⚡ <%= Math.round(prob.aiClassification.confidence * 100) %>% AI Confidence
+                        </span>
+                      <% } %>
+                    </div>
+                    
+                    <span class="dash-problem-title" style="font-size: var(--font-size-base);"><%= prob.title %></span>
+                    
+                    <div class="dash-problem-meta" style="margin-top: 4px;">
+                      <span>📍 <%= prob.location %></span>
                       <span>&bull;</span>
-                      <span style="font-style: italic; color: var(--color-text-muted);"><%= prob.assignmentReason %></span>
-                    <% } %>
+                      <span>👥 <%= prob.supporters ? prob.supporters.length : 1 %> Supporters</span>
+                      <span>&bull;</span>
+                      <span>Reported by <%= prob.reportedBy ? prob.reportedBy.name : 'Citizen' %></span>
+                      <span>&bull;</span>
+                      <span>Submitted <%= new Date(prob.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                      <% if (prob.assignmentReason) { %>
+                        <span>&bull;</span>
+                        <span style="font-style: italic; color: var(--color-text-muted);"><%= prob.assignmentReason %></span>
+                      <% } %>
+                    </div>
                   </div>
                 </div>
                 

@@ -53,6 +53,9 @@ app.use(setUserLocals);
 
 // Static files middleware
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// Resilient fallback for any nested relative image requests from sub-routes
+app.use(['/authority/problems/uploads', '/problems/uploads', '/citizen/uploads', '/authority/uploads'], express.static(path.join(__dirname, 'public/uploads')));
 
 // Auth Routes
 app.use('/auth', authRoutes);

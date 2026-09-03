@@ -150,7 +150,8 @@ async function seedDatabase() {
       supporters: [citizen._id, authority._id],
       priority: 'HIGH',
       severity: 'HIGH',
-      status: 'CHALLENGE_CREATED'
+      status: 'CHALLENGE_CREATED',
+      images: ['/images/challenge-agriculture.jpg']
     });
 
     const prob2 = await Problem.create({
@@ -162,7 +163,8 @@ async function seedDatabase() {
       supporters: [citizen._id, authority._id],
       priority: 'HIGH',
       severity: 'HIGH',
-      status: 'CHALLENGE_CREATED'
+      status: 'CHALLENGE_CREATED',
+      images: ['/uploads/evidence-1788095551782-911002898.jpeg']
     });
 
     const prob3 = await Problem.create({
@@ -174,7 +176,8 @@ async function seedDatabase() {
       supporters: [citizen._id, authority._id],
       priority: 'HIGH',
       severity: 'HIGH',
-      status: 'CHALLENGE_CREATED'
+      status: 'CHALLENGE_CREATED',
+      images: ['/images/challenge-education.jpg']
     });
 
     const prob4 = await Problem.create({
@@ -186,7 +189,8 @@ async function seedDatabase() {
       supporters: [citizen._id, authority._id],
       priority: 'HIGH',
       severity: 'HIGH',
-      status: 'CHALLENGE_CREATED'
+      status: 'CHALLENGE_CREATED',
+      images: ['/images/challenge-water.jpg', '/uploads/evidence-1788252501864-560207743.jpeg']
     });
     console.log('  ✔ Ground problems seeded.\n');
 

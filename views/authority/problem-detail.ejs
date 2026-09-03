@@ -102,16 +102,44 @@
                   Field Evidence Photos (<%= problem.images.length %>)
                 </h3>
                 <div class="evidence-gallery">
-                  <% problem.images.forEach(function(imgUrl) { %>
+                  <% problem.images.forEach(function(imgUrl, idx) { 
+                    let cleanUrl = imgUrl;
+                    if (cleanUrl && typeof cleanUrl === 'string') {
+                      cleanUrl = (cleanUrl.startsWith('http') || cleanUrl.startsWith('/')) ? cleanUrl : '/' + cleanUrl;
+                    } else {
+                      cleanUrl = '/images/jharkhand-hero.jpg';
+                    }
+                  %>
                     <div class="evidence-thumb">
-                      <img src="<%= imgUrl %>" alt="Evidence photo" loading="lazy" onerror="this.parentElement.style.display='none';" />
+                      <a href="<%= cleanUrl %>" target="_blank" rel="noopener noreferrer" title="Click to view full photo" style="display: block; width: 100%; height: 100%;">
+                        <img 
+                          src="<%= cleanUrl %>" 
+                          alt="Field evidence photo <%= idx + 1 %>" 
+                          loading="lazy" 
+                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" 
+                        />
+                        <div class="evidence-thumb-fallback" style="display: none; height: 100%; flex-direction: column; align-items: center; justify-content: center; background: var(--color-surface-soft); padding: var(--space-2); text-align: center; color: var(--color-text-muted); font-size: var(--font-size-xs);">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 4px; opacity: 0.6;">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                          </svg>
+                          <span>Evidence Photo <%= idx + 1 %></span>
+                          <span style="font-size: 0.65rem; opacity: 0.75;">(File link archived)</span>
+                        </div>
+                      </a>
                     </div>
                   <% }); %>
                 </div>
               <% } else { %>
-                <p class="text-muted" style="font-size: var(--font-size-xs); margin-top: var(--space-4); margin-bottom: 0;">
-                  No photo attachments were uploaded with this submission.
-                </p>
+                <div style="margin-top: var(--space-6); padding: var(--space-4); background-color: var(--color-surface-soft); border-radius: var(--radius-md); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-xs); color: var(--color-text-muted);">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                  <span>No photo attachments were uploaded with this submission.</span>
+                </div>
               <% } %>
             </div>
 

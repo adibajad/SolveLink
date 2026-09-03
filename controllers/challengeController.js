@@ -439,6 +439,17 @@ const postCreateChallenge = async (req, res, next) => {
     const constraintsList = parseList(constraints || requirements);
     const requirementsList = parseList(requirements || constraints);
 
+    // If linked to a source problem, inherit its evidence images
+    let challengeImage = '';
+    let challengeImages = [];
+    if (sourceId) {
+      const sourceProblemDoc = await Problem.findById(sourceId).lean();
+      if (sourceProblemDoc && sourceProblemDoc.images && sourceProblemDoc.images.length > 0) {
+        challengeImages = sourceProblemDoc.images;
+        challengeImage = sourceProblemDoc.images[0];
+      }
+    }
+
     const newChallenge = await Challenge.create({
       title: title.trim(),
       description: description.trim(),
@@ -447,6 +458,8 @@ const postCreateChallenge = async (req, res, next) => {
       authoritySector: sectorKey,
       location: location ? location.trim() : '',
       department: department.trim(),
+      image: challengeImage,
+      images: challengeImages,
       requiredSkills: skillsList,
       requiredTechnologies: techList,
       constraints: constraintsList,
