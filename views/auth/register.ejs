@@ -399,15 +399,25 @@
   <!-- Dynamic Role Field Switching Script -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('registerForm');
       const roleInputs = document.querySelectorAll('input[name="role"]');
       const authContainer = document.getElementById('authorityFieldsContainer');
       const uniContainer = document.getElementById('universityFieldsContainer');
       const indContainer = document.getElementById('industryFieldsContainer');
 
+      function setContainerState(container, isActive) {
+        if (!container) return;
+        container.style.display = isActive ? 'block' : 'none';
+        const fields = container.querySelectorAll('input, select, textarea');
+        fields.forEach(field => {
+          field.disabled = !isActive;
+        });
+      }
+
       function updateFields(role) {
-        if (authContainer) authContainer.style.display = (role === 'authority') ? 'block' : 'none';
-        if (uniContainer) uniContainer.style.display = (role === 'university') ? 'block' : 'none';
-        if (indContainer) indContainer.style.display = (role === 'industry') ? 'block' : 'none';
+        setContainerState(authContainer, role === 'authority');
+        setContainerState(uniContainer, role === 'university');
+        setContainerState(indContainer, role === 'industry');
       }
 
       roleInputs.forEach(input => {
@@ -416,6 +426,21 @@
           updateFields(e.target.value);
         });
       });
+
+      // Synchronize disabled states immediately on load
+      const checkedRole = document.querySelector('input[name="role"]:checked');
+      if (checkedRole) {
+        updateFields(checkedRole.value);
+      }
+
+      // Synchronize disabled state right before submit to prevent submitting inactive fields
+      if (form) {
+        form.addEventListener('submit', () => {
+          const selectedRoleInput = document.querySelector('input[name="role"]:checked');
+          const currentRole = selectedRoleInput ? selectedRoleInput.value : 'citizen';
+          updateFields(currentRole);
+        });
+      }
     });
   </script>
   <script src="/js/main.js"></script>

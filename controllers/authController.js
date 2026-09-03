@@ -185,7 +185,53 @@ const postRegister = async (req, res) => {
     technologies,
     capabilities
   } = req.body;
-  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+  const normalizedEmail = email && typeof email === 'string' ? email.trim().toLowerCase() : '';
+
+  const validRoles = ['citizen', 'authority', 'university', 'industry'];
+  const userRole = validRoles.includes(role) ? role : 'citizen';
+
+  // Safe extraction and type validation for organization
+  let parsedOrganization = '';
+  let organizationValidationError = null;
+
+  if (organization !== undefined && organization !== null && organization !== '') {
+    if (typeof organization === 'string') {
+      parsedOrganization = organization.trim();
+    } else if (Array.isArray(organization)) {
+      const hasNonString = organization.some(item => typeof item !== 'string');
+      if (hasNonString) {
+        organizationValidationError = 'Organization must be a valid text string.';
+      } else {
+        const nonEmpties = organization
+          .map(item => item.trim())
+          .filter(item => item.length > 0);
+
+        if (nonEmpties.length > 1 && new Set(nonEmpties).size > 1) {
+          organizationValidationError = 'Multiple conflicting organization values received. Organization must be a single text string.';
+        } else {
+          parsedOrganization = nonEmpties[0] || '';
+        }
+      }
+    } else {
+      organizationValidationError = 'Organization must be a valid text string.';
+    }
+  }
+
+  const formData = {
+    name: typeof name === 'string' ? name : '',
+    email: normalizedEmail,
+    role: userRole,
+    organization: parsedOrganization,
+    skills: typeof skills === 'string' ? skills : (Array.isArray(skills) ? skills.join(', ') : ''),
+    location: typeof location === 'string' ? location : '',
+    authoritySector: typeof authoritySector === 'string' ? authoritySector : '',
+    department: typeof department === 'string' ? department : '',
+    jurisdiction: typeof jurisdiction === 'string' ? jurisdiction : '',
+    industrySector: typeof industrySector === 'string' ? industrySector : '',
+    domains: typeof domains === 'string' ? domains : (Array.isArray(domains) ? domains.join(', ') : ''),
+    technologies: typeof technologies === 'string' ? technologies : (Array.isArray(technologies) ? technologies.join(', ') : ''),
+    capabilities: typeof capabilities === 'string' ? capabilities : (Array.isArray(capabilities) ? capabilities.join(', ') : '')
+  };
 
   // Explicitly disallow public registration as Admin
   if (role === 'admin') {
@@ -193,38 +239,25 @@ const postRegister = async (req, res) => {
       activePath: '/auth/register',
       error: 'Administrator accounts cannot be created through public registration.',
       formData: {
-        name: name || '',
-        email: normalizedEmail,
+        ...formData,
         role: 'citizen',
-        organization: organization || '',
-        skills: skills || '',
-        location: location || ''
+        organization: ''
       }
     });
   }
 
-  const validRoles = ['citizen', 'authority', 'university', 'industry'];
-  const userRole = validRoles.includes(role) ? role : 'citizen';
-
-  const formData = {
-    name: name || '',
-    email: normalizedEmail,
-    role: userRole,
-    organization: organization || '',
-    skills: skills || '',
-    location: location || '',
-    authoritySector: authoritySector || '',
-    department: department || '',
-    jurisdiction: jurisdiction || '',
-    industrySector: industrySector || '',
-    domains: domains || '',
-    technologies: technologies || '',
-    capabilities: capabilities || ''
-  };
+  // If organization type validation failed, return clear 400 validation error
+  if (organizationValidationError) {
+    return res.status(400).render('auth/register', {
+      activePath: '/auth/register',
+      error: organizationValidationError,
+      formData
+    });
+  }
 
   try {
     // 1. Validations
-    if (!name || !normalizedEmail || !password) {
+    if (!name || typeof name !== 'string' || !name.trim() || !normalizedEmail || !password) {
       return res.status(400).render('auth/register', {
         activePath: '/auth/register',
         error: 'Name, email, and password are required.',
@@ -242,7 +275,7 @@ const postRegister = async (req, res) => {
       });
     }
 
-    if (password.length < 6) {
+    if (typeof password !== 'string' || password.length < 6) {
       return res.status(400).render('auth/register', {
         activePath: '/auth/register',
         error: 'Password must be at least 6 characters long.',
@@ -275,10 +308,59 @@ const postRegister = async (req, res) => {
     const technologiesArray = parseArray(technologies);
     const capabilitiesArray = parseArray(capabilities);
 
-    const cleanSector = authoritySector ? authoritySector.trim().toLowerCase() : '';
-    const cleanDept = department ? department.trim() : (organization ? organization.trim() : '');
-    const cleanJurisdiction = jurisdiction ? jurisdiction.trim() : (location ? location.trim() : '');
-    const cleanIndSector = industrySector ? industrySector.trim().toLowerCase() : '';
+    const cleanSector = typeof authoritySector === 'string' ? authoritySector.trim().toLowerCase() : '';
+    const cleanDept = typeof department === 'string' ? department.trim() : '';
+    const cleanJurisdiction = typeof jurisdiction === 'string' ? jurisdiction.trim() : '';
+    const cleanLocation = typeof location === 'string' ? location.trim() : '';
+    const cleanIndSector = typeof industrySector === 'string' ? industrySector.trim().toLowerCase() : '';
+
+    // Standard authority sector labels for organizational name resolution
+    const authoritySectorLabels = {
+      municipal_corporation: 'Municipal Corporation',
+      water_sanitation: 'Water & Sanitation Department',
+      public_works_infrastructure: 'Public Works & Infrastructure Department',
+      public_health: 'Department of Public Health',
+      agriculture: 'Department of Agriculture',
+      energy: 'Electricity & Energy Board',
+      waste_management: 'Waste Management Authority',
+      education: 'Department of Education',
+      digital_governance_it: 'Digital Governance & IT Directorate',
+      environment_forest: 'Department of Environment & Forest',
+      transport: 'Transport Authority',
+      urban_development: 'Urban Development Authority',
+      rural_development: 'Rural Development Authority',
+      public_safety: 'Public Safety Directorate'
+    };
+
+    // Construct appropriate organization string
+    let cleanOrg = parsedOrganization;
+    if (!cleanOrg && userRole === 'authority') {
+      // Determine primary area / district from jurisdiction or location
+      const area = (cleanJurisdiction || cleanLocation || '').split(',')[0].replace(/\b(district|ward|circle|zone)\b/gi, '').trim();
+
+      if (cleanSector === 'municipal_corporation') {
+        if (cleanDept && /municipal\s+corporation/i.test(cleanDept)) {
+          cleanOrg = cleanDept;
+        } else if (area) {
+          cleanOrg = `${area} Municipal Corporation`;
+        } else {
+          cleanOrg = cleanDept || 'Municipal Corporation';
+        }
+      } else if (cleanDept) {
+        cleanOrg = cleanDept;
+      } else if (cleanSector && authoritySectorLabels[cleanSector]) {
+        const sectorName = authoritySectorLabels[cleanSector];
+        cleanOrg = area ? `${area} ${sectorName}` : sectorName;
+      } else {
+        cleanOrg = area ? `${area} Municipal Administration` : 'District Municipal Administration';
+      }
+    } else if (!cleanOrg) {
+      cleanOrg = cleanDept;
+    }
+
+    const finalDept = cleanDept || cleanOrg;
+    const finalJurisdiction = cleanJurisdiction || cleanLocation;
+    const finalLocation = cleanLocation || cleanJurisdiction;
 
     // 5. Create User Immediately
     const user = await User.create({
@@ -286,16 +368,16 @@ const postRegister = async (req, res) => {
       email: normalizedEmail,
       password: hashedPassword,
       role: userRole,
-      organization: organization ? organization.trim() : cleanDept,
-      department: cleanDept,
+      organization: cleanOrg,
+      department: finalDept,
       authoritySector: cleanSector,
-      jurisdiction: cleanJurisdiction,
+      jurisdiction: finalJurisdiction,
       industrySector: cleanIndSector,
       skills: skillsArray,
       domains: domainsArray,
       technologies: technologiesArray,
       capabilities: capabilitiesArray,
-      location: location ? location.trim() : cleanJurisdiction,
+      location: finalLocation,
       isVerified: true
     });
 
@@ -309,9 +391,9 @@ const postRegister = async (req, res) => {
       email: user.email,
       role: user.role,
       organization: user.organization || '',
-      department: user.department || '',
+      department: user.department || user.organization || '',
       authoritySector: user.authoritySector || '',
-      jurisdiction: user.jurisdiction || '',
+      jurisdiction: user.jurisdiction || user.location || '',
       industrySector: user.industrySector || '',
       skills: user.skills || [],
       domains: user.domains || [],
