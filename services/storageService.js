@@ -38,6 +38,31 @@ function getGridFSBucket() {
 }
 
 /**
+ * Check if Cloudinary credentials are provided via environment variables
+ */
+function isCloudinaryConfigured() {
+  return Boolean(
+    process.env.CLOUDINARY_URL ||
+    (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+  );
+}
+
+/**
+ * Configure Cloudinary instance with env vars
+ */
+function configureCloudinary(cloudinary) {
+  if (process.env.CLOUDINARY_URL) {
+    cloudinary.config({ cloudinary_url: process.env.CLOUDINARY_URL });
+  } else if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+  }
+}
+
+/**
  * Save file buffer to durable storage.
  * 
  * @param {Object} file - { buffer, originalname, mimetype }
@@ -57,15 +82,11 @@ async function saveFile({ buffer, originalname, mimetype }) {
   const filename = `evidence-${uniqueSuffix}${ext}`;
   const resolvedMime = mimetype || (ext === '.png' ? 'image/png' : (ext === '.webp' ? 'image/webp' : 'image/jpeg'));
 
-  // 1. Optional External Cloudinary Storage
-  if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+  // 1. External Cloudinary Storage (Persistent object storage for Render)
+  if (isCloudinaryConfigured()) {
     try {
       const cloudinary = require('cloudinary').v2;
-      cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET
-      });
+      configureCloudinary(cloudinary);
 
       const uploadResult = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -85,6 +106,7 @@ async function saveFile({ buffer, originalname, mimetype }) {
         readable.pipe(uploadStream);
       });
 
+      console.log(`[StorageService] Image uploaded to Cloudinary: ${uploadResult.secure_url}`);
       return uploadResult.secure_url;
     } catch (cloudErr) {
       console.warn('[StorageService] Cloudinary upload failed, falling back to GridFS:', cloudErr.message);
@@ -191,6 +213,23 @@ async function getFileStream(filename) {
  */
 async function deleteFile(fileUrlOrPath) {
   if (!fileUrlOrPath || typeof fileUrlOrPath !== 'string') return;
+
+  // 1. If stored on Cloudinary, delete from Cloudinary
+  if (fileUrlOrPath.includes('cloudinary.com')) {
+    try {
+      const cloudinary = require('cloudinary').v2;
+      configureCloudinary(cloudinary);
+      const match = fileUrlOrPath.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+      if (match && match[1]) {
+        await cloudinary.uploader.destroy(match[1]);
+        console.log(`[StorageService] Image deleted from Cloudinary: ${match[1]}`);
+      }
+    } catch (cErr) {
+      console.warn('[StorageService] Cloudinary delete warning:', cErr.message);
+    }
+    return;
+  }
+
   const filename = path.basename(fileUrlOrPath);
 
   // Remove from local disk

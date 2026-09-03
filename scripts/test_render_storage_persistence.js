@@ -29,7 +29,7 @@ const runPersistenceTest = async () => {
 
   const request = (reqPath) => {
     return new Promise((resolve, reject) => {
-      http.get(`http://localhost:${port}${reqPath}`, (res) => {
+      http.get(`http://127.0.0.1:${port}${reqPath}`, { agent: false }, (res) => {
         const chunks = [];
         res.on('data', chunk => chunks.push(chunk));
         res.on('end', () => {
@@ -162,8 +162,53 @@ const runPersistenceTest = async () => {
     assert(webpPath.endsWith('.webp'), 'Should preserve .webp extension');
     console.log('   ✔ PASS: PNG and WebP formats stored correctly.\n');
 
-    // 8. Test old lost file (returns 404 gracefully)
-    console.log('7. Testing old missing file from pre-fix era...');
+    // 8. Test Cloudinary integration flow
+    console.log('7. Testing Cloudinary persistent storage integration flow...');
+    const cloudinary = require('cloudinary').v2;
+    const originalUploadStream = cloudinary.uploader.upload_stream;
+    const originalDestroy = cloudinary.uploader.destroy;
+
+    let destroyedPublicId = null;
+    cloudinary.uploader.upload_stream = (options, cb) => {
+      const { Writable } = require('stream');
+      const writable = new Writable({
+        write(chunk, encoding, callback) { callback(); }
+      });
+      writable.on('finish', () => {
+        cb(null, {
+          secure_url: `https://res.cloudinary.com/testcloud/image/upload/v1234567890/solvelink/evidence/${options.public_id}.jpg`,
+          public_id: `solvelink/evidence/${options.public_id}`
+        });
+      });
+      return writable;
+    };
+    cloudinary.uploader.destroy = async (pubId) => {
+      destroyedPublicId = pubId;
+      return { result: 'ok' };
+    };
+
+    process.env.CLOUDINARY_URL = 'cloudinary://123456789012345:abcdefghijklmnopqrstuvwxyzA@testcloud';
+
+    const cloudPath = await storageService.saveFile({
+      buffer: jpegBuffer,
+      originalname: 'field_survey.jpg',
+      mimetype: 'image/jpeg'
+    });
+
+    assert(cloudPath.startsWith('https://res.cloudinary.com/testcloud/'), 'Should return secure Cloudinary HTTPS URL');
+    console.log(`   ✔ PASS: Cloudinary upload returned persistent CDN URL: ${cloudPath}`);
+
+    await storageService.deleteFile(cloudPath);
+    assert(destroyedPublicId && destroyedPublicId.includes('evidence-'), 'Should trigger Cloudinary destroy with public_id');
+    console.log(`   ✔ PASS: Cloudinary asset destroyed: ${destroyedPublicId}\n`);
+
+    // Reset Cloudinary env vars
+    delete process.env.CLOUDINARY_URL;
+    cloudinary.uploader.upload_stream = originalUploadStream;
+    cloudinary.uploader.destroy = originalDestroy;
+
+    // 9. Test old lost file (returns 404 gracefully)
+    console.log('8. Testing old missing file from pre-fix era...');
     const lostRes = await request('/uploads/evidence-lost-pre-fix-file.jpg');
     assert.strictEqual(lostRes.statusCode, 404, 'Old non-existent file should return clean 404 without crashing');
     console.log('   ✔ PASS: Missing file returns 404 without server error.\n');
